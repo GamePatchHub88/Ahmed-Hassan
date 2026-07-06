@@ -2570,7 +2570,7 @@
               <input
                 type="text"
                 id="crSlug"
-                placeholder="Slug (e.g., fastapi-zero-to-production)"
+                placeholder="Slug (leave empty to auto-generate from title)"
               />
               <div style="display: flex; gap: 10px; align-items: center">
                 <input
@@ -2686,7 +2686,7 @@
               <input
                 type="text"
                 id="rmSlug"
-                placeholder="Slug (e.g., python-developer)"
+                placeholder="Slug (leave empty to auto-generate from title)"
               />
               <textarea
                 id="rmDescription"
@@ -2945,6 +2945,26 @@
           month: "short",
           day: "numeric",
         });
+      }
+      function slugify(str) {
+        return (str || "")
+          .trim()
+          .replace(/\s+/g, "-")
+          .replace(/[^\p{L}\p{N}-]/gu, "")
+          .replace(/-+/g, "-")
+          .toLowerCase();
+      }
+      async function ensureUniqueSlug(table, baseSlug, excludeId) {
+        let slug = baseSlug || "item-" + Date.now();
+        let attempt = 0;
+        while (true) {
+          let query = supa.from(table).select("id").eq("slug", slug);
+          if (excludeId) query = query.neq("id", excludeId);
+          const { data } = await query;
+          if (!data || data.length === 0) return slug;
+          attempt++;
+          slug = `${baseSlug}-${attempt + 1}`;
+        }
       }
 
       /* ================== DATA HYDRATION ================== */
@@ -3444,15 +3464,25 @@
       async function saveCourse() {
         const id = document.getElementById("crId").value;
         const title = document.getElementById("crTitle").value.trim();
-        const slug = document.getElementById("crSlug").value.trim();
+        const slugInput = document.getElementById("crSlug").value.trim();
         const cover_url = document.getElementById("crCover").value.trim();
         const description = document
           .getElementById("crDescription")
           .value.trim();
-        if (!title || !slug) {
-          alert("Title and slug are required.");
+        if (!title) {
+          alert("Title is required.");
           return;
         }
+
+        const baseSlug = slugify(slugInput || title);
+        if (!baseSlug) {
+          alert(
+            "Could not generate a valid slug from this title — please type a slug manually using letters/numbers.",
+          );
+          return;
+        }
+        const slug = await ensureUniqueSlug("courses", baseSlug, id || null);
+        document.getElementById("crSlug").value = slug;
 
         const payload = {
           title,
@@ -3663,14 +3693,25 @@
       async function saveRoadmap() {
         const id = document.getElementById("rmId").value;
         const title = document.getElementById("rmTitle").value.trim();
-        const slug = document.getElementById("rmSlug").value.trim();
+        const slugInput = document.getElementById("rmSlug").value.trim();
         const description = document
           .getElementById("rmDescription")
           .value.trim();
-        if (!title || !slug) {
-          alert("Title and slug are required.");
+        if (!title) {
+          alert("Title is required.");
           return;
         }
+
+        // Auto-generate a clean slug from the title if left empty, otherwise sanitize whatever was typed
+        const baseSlug = slugify(slugInput || title);
+        if (!baseSlug) {
+          alert(
+            "Could not generate a valid slug from this title — please type a slug manually using letters/numbers.",
+          );
+          return;
+        }
+        const slug = await ensureUniqueSlug("roadmaps", baseSlug, id || null);
+        document.getElementById("rmSlug").value = slug;
 
         const payload = { title, slug, description };
         const { error } = id
@@ -4390,6 +4431,7 @@
           grid.innerHTML = rendered.join("");
           markReveal(grid);
         } catch (err) {
+          console.error("loadCourses failed:", err);
           grid.innerHTML = `<div class="empty-state">Could not load courses. Make sure "courses" and "course_lessons" tables exist in Supabase.</div>`;
         }
       }
@@ -4398,17 +4440,26 @@
         const wrap = document.getElementById("courseDetail");
         wrap.innerHTML = `<div class="empty-state">Loading...</div>`;
         try {
-          const { data: c, error } = await supa
+          const { data: matches, error } = await supa
             .from("courses")
             .select("*")
             .eq("slug", slug)
-            .single();
-          if (error || !c) throw error || new Error("not found");
-          const { data: lessons } = await supa
+            .order("created_at", { ascending: false });
+          if (error) throw error;
+          if (!matches || matches.length === 0)
+            throw new Error('No course found with slug "' + slug + '"');
+          if (matches.length > 1)
+            console.warn(
+              `Duplicate courses found with slug "${slug}" — showing the most recent one.`,
+            );
+          const c = matches[0];
+
+          const { data: lessons, error: lessonsErr } = await supa
             .from("course_lessons")
             .select("*")
             .eq("course_id", c.id)
             .order("lesson_order", { ascending: true });
+          if (lessonsErr) throw lessonsErr;
           window.currentCourseObj = c;
           window.currentCourseLessons = lessons || [];
           renderCourseShell(
@@ -4417,7 +4468,8 @@
             window.currentCourseLessons[0]?.id || null,
           );
         } catch (err) {
-          wrap.innerHTML = `<div class="empty-state">Course not found.</div>`;
+          console.error("showCourse failed:", err);
+          wrap.innerHTML = `<div class="empty-state">Course not found. (Open the browser console for technical details.)</div>`;
         }
       }
 
@@ -4562,6 +4614,7 @@
           grid.innerHTML = rendered.join("");
           markReveal(grid);
         } catch (err) {
+          console.error("loadRoadmaps failed:", err);
           grid.innerHTML = `<div class="empty-state">Could not load roadmaps. Make sure "roadmaps" and "roadmap_steps" tables exist in Supabase.</div>`;
         }
       }
@@ -4570,21 +4623,33 @@
         const wrap = document.getElementById("roadmapDetail");
         wrap.innerHTML = `<div class="empty-state">Loading...</div>`;
         try {
-          const { data: r, error } = await supa
+          // Use a plain query instead of .single() so a duplicated slug doesn't
+          // silently fail — we just take the most recently created match.
+          const { data: matches, error } = await supa
             .from("roadmaps")
             .select("*")
             .eq("slug", slug)
-            .single();
-          if (error || !r) throw error || new Error("not found");
-          const { data: steps } = await supa
+            .order("created_at", { ascending: false });
+          if (error) throw error;
+          if (!matches || matches.length === 0)
+            throw new Error('No roadmap found with slug "' + slug + '"');
+          if (matches.length > 1)
+            console.warn(
+              `Duplicate roadmaps found with slug "${slug}" — showing the most recent one. Consider deleting the duplicate(s) in the admin panel.`,
+            );
+          const r = matches[0];
+
+          const { data: steps, error: stepsErr } = await supa
             .from("roadmap_steps")
             .select("*")
             .eq("roadmap_id", r.id)
             .order("step_order", { ascending: true });
+          if (stepsErr) throw stepsErr;
           const stepList = steps || [];
           renderRoadmapDetail(r, stepList);
         } catch (err) {
-          wrap.innerHTML = `<div class="empty-state">Roadmap not found.</div>`;
+          console.error("showRoadmap failed:", err);
+          wrap.innerHTML = `<div class="empty-state">Roadmap not found. (Open the browser console for technical details.)</div>`;
         }
       }
 
