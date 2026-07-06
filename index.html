@@ -23,6 +23,19 @@
   --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.05);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
+html[data-theme="dark"]{
+  --bg: #0b1120;
+  --bg-soft: #111827;
+  --card: #161f32;
+  --border: #263449;
+  --text: #f1f5f9;
+  --text-dim: #94a3b8;
+  --accent: #ef4444;
+  --accent-hover: #f87171;
+  --shadow: 0 4px 6px -1px rgba(0,0,0,0.25), 0 2px 4px -1px rgba(0,0,0,0.15);
+  --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.35), 0 4px 6px -2px rgba(0,0,0,0.2);
+}
+body, .post-cover, .editor-area{ transition: background-color .3s ease, color .3s ease, border-color .3s ease; }
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 *{box-sizing:border-box; margin:0; padding:0}
@@ -50,10 +63,11 @@ header{
 }
 .nav-wrap{
   max-width:1100px; margin:0 auto; padding:14px 20px;
-  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  display:flex; flex-direction:row; align-items:center; justify-content:space-between; gap:16px;
 }
 .brand{
   display:flex; align-items:center; gap:8px; font-weight:800; font-size:22px; color: var(--text);
+  order:0;
 }
 .logo-box {
   background: var(--text);
@@ -64,10 +78,14 @@ header{
   border-radius: 6px;
   font-weight: 700;
   letter-spacing: -0.5px;
+  display:inline-flex; align-items:center; min-height:24px;
 }
 .logo-box span { color: var(--accent); }
+.logo-image{
+  height:36px; max-width:160px; object-fit:contain; border-radius:6px; display:none;
+}
 
-nav.links{display:flex; gap:24px; flex-wrap:wrap; align-items:center}
+nav.links{display:flex; gap:24px; flex-wrap:wrap; align-items:center; order:1;}
 nav.links a{
   color:var(--text-dim); font-weight:500; font-size:15px; position:relative; padding:4px 0;
   transition:.2s;
@@ -80,12 +98,20 @@ nav.links a::after{
 }
 nav.links a:hover::after, nav.links a.active::after{width:100%}
 .burger{display:none; background:var(--bg-soft); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:6px 12px; font-size:18px; cursor:pointer}
+.theme-toggle{
+  background:var(--bg-soft); border:1px solid var(--border); color:var(--text);
+  width:36px; height:36px; border-radius:8px; cursor:pointer; font-size:15px;
+  display:flex; align-items:center; justify-content:center; transition:.2s;
+}
+.theme-toggle:hover{border-color:var(--accent)}
 
 /* ===== Hero ===== */
 .hero{
   max-width:1100px; margin:0 auto; padding:60px 20px 30px;
-  display:grid; grid-template-columns:1.3fr .7fr; gap:40px; align-items:center;
+  display:grid; grid-template-columns:.7fr 1.3fr; gap:40px; align-items:center;
 }
+.hero > div:first-child{ order:2; }
+.hero .avatar-card{ order:1; }
 .hero h1{
   font-size:46px; font-weight:800; line-height:1.2; margin-bottom:16px; letter-spacing: -1px;
 }
@@ -106,13 +132,32 @@ nav.links a:hover::after, nav.links a.active::after{width:100%}
   display:flex; align-items:center; justify-content:center;
   font-size:32px; font-weight:800; color:var(--accent);
   font-family: 'JetBrains Mono', monospace;
+  overflow:hidden;
 }
+.avatar-circle img{width:100%; height:100%; object-fit:cover; display:block;}
 .avatar-card h3{font-size:18px; margin-bottom:4px; font-weight: 700;}
 .avatar-card p{color:var(--text-dim); font-size:14px}
 
 /* ===== Animations ===== */
 @keyframes fadeIn{ from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:translateY(0)} }
 #site-page > div { animation: fadeIn 0.4s ease both; }
+
+/* Light, elegant scroll-reveal — slides in from the sides */
+.reveal{
+  opacity:0;
+  transition: opacity .6s cubic-bezier(.22,.68,.35,1), transform .6s cubic-bezier(.22,.68,.35,1);
+  will-change: opacity, transform;
+}
+.reveal.reveal-left{ transform: translateX(-36px); }
+.reveal.reveal-right{ transform: translateX(36px); }
+.reveal.in{ opacity:1; transform: translateX(0); }
+
+/* Typing effect for brand name */
+.type-cursor{
+  display:inline-block; width:2px; margin-left:2px;
+  background: currentColor; animation: blinkCursor .85s steps(1) infinite;
+}
+@keyframes blinkCursor{ 0%,49%{opacity:1} 50%,100%{opacity:0} }
 
 /* Scroll Top Button */
 .scroll-top-btn{
@@ -216,12 +261,68 @@ main{max-width:1100px; margin:0 auto; padding:20px}
 .post-view .cover{border-radius:var(--radius); overflow:hidden; margin-bottom:24px; max-height:360px; border: 1px solid var(--border);}
 .post-view h1{font-size:36px; margin-bottom:12px; font-weight: 800; letter-spacing: -0.5px;}
 .post-view .meta{color:var(--text-dim); font-size:14px; margin-bottom:26px}
-.post-content{font-size:17px; color: #334155; line-height: 1.75;}
+.post-content{font-size:17px; color: var(--text); line-height: 1.75;}
 .post-content img{max-width:100%; border-radius:8px; margin:16px 0; display:block; border: 1px solid var(--border);}
 .post-content blockquote{border-left:4px solid var(--accent); padding:4px 16px; color:var(--text-dim); font-style: italic; margin:18px 0}
 .post-content ul, .post-content ol{margin:10px 24px; padding-left: 10px;}
-.post-content h2, .post-content h3{margin:28px 0 12px; color:var(--text); font-weight: 700;}
+.post-content h2, .post-content h3{margin:28px 0 12px; color:var(--text); font-weight: 700; scroll-margin-top:90px;}
 .post-content p{margin-bottom:16px}
+.post-content pre{
+  background:var(--dark-hold); color:#e2e8f0; padding:16px; border-radius:8px; overflow-x:auto;
+  font-family:'JetBrains Mono', monospace; font-size:14px; margin:16px 0; position:relative;
+}
+.post-content pre .copy-code-btn{
+  position:absolute; top:8px; right:8px; background:rgba(255,255,255,0.1); color:#e2e8f0; border:1px solid rgba(255,255,255,0.2);
+  border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer; transition:.15s;
+}
+.post-content pre .copy-code-btn:hover{background:rgba(255,255,255,0.2)}
+
+/* ===== Reading Progress Bar ===== */
+.reading-progress{
+  position:fixed; top:0; left:0; height:3px; background:var(--accent); z-index:300;
+  width:0%; transition:width .1s linear;
+}
+
+/* ===== Table of Contents ===== */
+.toc-box{
+  background:var(--bg-soft); border:1px solid var(--border); border-radius:10px;
+  padding:16px 20px; margin-bottom:28px;
+}
+.toc-box h4{font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-dim); margin-bottom:10px; font-weight:700;}
+.toc-box ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px;}
+.toc-box li a{font-size:14px; color:var(--text); font-weight:500; cursor:pointer; transition:.15s;}
+.toc-box li a:hover{color:var(--accent)}
+.toc-box li.toc-h3{padding-left:16px}
+
+/* ===== Bookmark button ===== */
+.bookmark-btn{
+  background:var(--bg-soft); border:1px solid var(--border); color:var(--text);
+  padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:500; margin-left:8px;
+}
+.bookmark-btn.saved{color:var(--accent); border-color:rgba(239,68,68,0.3)}
+
+/* ===== Trending Section ===== */
+.trending-section{max-width:1100px; margin:10px auto 0; padding:0 20px}
+.trending-section h2{font-size:20px; font-weight:800; margin-bottom:14px; display:flex; align-items:center; gap:8px}
+.trending-scroll{display:flex; gap:16px; overflow-x:auto; padding-bottom:8px}
+.trending-card{
+  flex:0 0 240px; background:var(--card); border:1px solid var(--border); border-radius:10px;
+  padding:14px; cursor:pointer; transition:.2s; box-shadow:var(--shadow);
+}
+.trending-card:hover{border-color:var(--accent); transform:translateY(-2px)}
+.trending-card .rank{font-size:12px; font-weight:800; color:var(--accent)}
+.trending-card .t{font-size:14px; font-weight:700; margin:4px 0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.trending-card .v{font-size:12px; color:var(--text-dim)}
+
+/* ===== Content Loading Skeletons ===== */
+.skeleton-card{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;
+}
+.skeleton-block{
+  background: linear-gradient(90deg, var(--bg-soft) 25%, var(--border) 50%, var(--bg-soft) 75%);
+  background-size:200% 100%; animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+@keyframes skeletonPulse{ 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
 /* ===== Contact Section ===== */
 .contact-section{
@@ -251,6 +352,22 @@ main{max-width:1100px; margin:0 auto; padding:20px}
 .msg-status.err{background:rgba(239,68,68,.1); color:#dc2626; display:block}
 
 footer{text-align:center; padding:40px 20px; color:var(--text-dim); font-size:14px; border-top:1px solid var(--border); margin-top:60px}
+
+/* ===== Newsletter ===== */
+.newsletter-section{
+  max-width:650px; margin:50px auto 0; padding:36px 30px; text-align:center;
+  background:var(--bg-soft); border:1px solid var(--border); border-radius:var(--radius);
+}
+.newsletter-section h3{font-size:22px; font-weight:800; margin-bottom:6px}
+.newsletter-section p{color:var(--text-dim); font-size:14px; margin-bottom:18px}
+.newsletter-form{display:flex; gap:10px; max-width:420px; margin:0 auto; flex-wrap:wrap}
+.newsletter-form input{
+  flex:1; min-width:180px; padding:12px 14px; border-radius:8px; border:1px solid var(--border);
+  background:var(--card); color:var(--text); font-size:14px;
+}
+.newsletter-form input:focus{outline:none; border-color:var(--accent)}
+.newsletter-form .btn{flex-shrink:0}
+.newsletter-section .msg-status{max-width:420px; margin:12px auto 0}
 
 /* ===== Modal (Admin Login) ===== */
 .modal-backdrop{
@@ -338,6 +455,8 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
 
 @media (max-width:800px){
   .hero{grid-template-columns:1fr; padding-top: 30px;}
+  .hero > div:first-child{ order:1; }
+  .hero .avatar-card{ order:2; }
   .hero h1{font-size:34px}
   nav.links{
     position:fixed; top:60px; left:0; right:0; background:var(--card);
@@ -355,20 +474,26 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
 <div id="site-page">
   <header>
     <div class="nav-wrap">
-      <a href="#/" class="brand"><div class="logo-box">Ah<span>_Stack</span></div></a>
+      <a href="#/" class="brand" id="brandLink">
+        <div class="logo-box" id="logoBox"><span id="logoTypeTarget">Ah<span>_Stack</span></span></div>
+        <img src="" alt="logo" class="logo-image" id="logoImage">
+      </a>
       <button class="burger" id="burgerBtn">☰</button>
       <nav class="links" id="navLinks">
         <a href="#/" class="nav-link active" data-view="home">Home</a>
         <span id="dynamicNavLinks"></span>
         <a href="#/contact" class="nav-link" data-view="contact">Contact</a>
+        <button class="theme-toggle" id="themeToggleBtn" title="Toggle dark mode" onclick="toggleTheme()">🌙</button>
       </nav>
     </div>
   </header>
 
+  <button class="scroll-top-btn" id="scrollTopBtn" title="Back to top" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
+
   <div id="view-home">
     <section class="hero">
       <div>
-        <h1>Welcome to <span>Ah Stack</span><br>Insights & Tech Roadmaps</h1>
+        <h1 id="heroTypeTarget">Welcome to <span>Ah Stack</span><br>Insights & Tech Roadmaps</h1>
         <p>A technical platform dedicated to sharing architectural concepts, code practicalities, and roadmap guidelines for software engineer pioneers.</p>
         <div class="badges">
           <span class="badge">🚀 DevOps</span>
@@ -377,7 +502,7 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
         </div>
       </div>
       <div class="avatar-card">
-        <div class="avatar-circle">Ah</div>
+        <div class="avatar-circle" id="avatarCircle"><span id="avatarCircleText">Ah</span></div>
         <h3>Ah Stack Engine</h3>
         <p>Curated by Ahmed Hassan</p>
       </div>
@@ -436,6 +561,16 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
     </div>
   </div>
 
+  <div class="newsletter-section reveal reveal-left">
+    <h3>📬 Stay in the Loop</h3>
+    <p>Subscribe to get new articles and roadmap updates in your inbox.</p>
+    <form class="newsletter-form" id="newsletterForm">
+      <input type="email" id="newsletterEmail" placeholder="Your email address" required>
+      <button type="submit" class="btn">Subscribe</button>
+    </form>
+    <div class="msg-status" id="newsletterStatus"></div>
+  </div>
+
   <footer>
     © 2026 Ah Stack — Built for scaling builders. All rights reserved.
   </footer>
@@ -484,6 +619,10 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
             <input type="file" id="coverUploadInput" accept="image/*" style="display:none" onchange="uploadCoverImage(event)">
           </div>
           <textarea id="postExcerpt" placeholder="Short description metadata snippet for listings" style="min-height:80px"></textarea>
+          <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:var(--text); cursor:pointer">
+            <input type="checkbox" id="postPublished" checked style="width:auto">
+            Publish immediately (uncheck to save as draft)
+          </label>
 
           <label style="font-size:13px; color:var(--text-dim); margin-top:4px; font-weight:600">Rich Post Engine Content Body</label>
           <div class="editor-wrap">
@@ -491,6 +630,8 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
               <button type="button" title="Bold" onclick="fmt('bold')"><b>B</b></button>
               <button type="button" title="Italic" onclick="fmt('italic')"><i>I</i></button>
               <button type="button" title="Underline" onclick="fmt('underline')"><u>U</u></button>
+              <button type="button" title="Center Align Text" onclick="fmt('justifyCenter')">↔</button>
+              <button type="button" title="Align Left" onclick="fmt('justifyLeft')">⟸</button>
               <div class="sep"></div>
               <button type="button" title="Header 2" onclick="fmt('formatBlock','H2')">H2</button>
               <button type="button" title="Header 3" onclick="fmt('formatBlock','H3')">H3</button>
@@ -519,7 +660,7 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
       <div class="admin-card">
         <h3 style="margin-bottom:14px">Staged Manuscripts</h3>
         <table>
-          <thead><tr><th>Title Headline</th><th>Ecosystem Segment</th><th>Deployment Date</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Title Headline</th><th>Ecosystem Segment</th><th>Status</th><th>Deployment Date</th><th>Actions</th></tr></thead>
           <tbody id="postsTableBody"></tbody>
         </table>
       </div>
@@ -554,6 +695,20 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
     </div>
 
     <div class="admin-panel" id="panel-settings">
+      <div class="admin-card" style="max-width:420px">
+        <h3 style="margin-bottom:14px">🖼️ Site Branding / Logo</h3>
+        <p style="color:var(--text-dim); font-size:13px; margin-bottom:14px">Upload a custom logo image to replace the default text logo across the site header. Leave empty to keep the default animated text logo.</p>
+        <div id="brandLogoPreviewWrap" style="display:flex; align-items:center; gap:14px; margin-bottom:14px">
+          <img id="brandLogoPreview" src="" alt="" style="display:none; height:48px; max-width:180px; object-fit:contain; border:1px solid var(--border); border-radius:8px; padding:4px; background:#fff">
+          <span id="brandLogoEmptyNote" style="font-size:13px; color:var(--text-dim)">No custom logo set — using default text logo.</span>
+        </div>
+        <div class="row-actions">
+          <button type="button" class="icon-btn" onclick="document.getElementById('siteLogoInput').click()">📤 Upload Logo</button>
+          <input type="file" id="siteLogoInput" accept="image/*" style="display:none" onchange="uploadSiteLogo(event)">
+          <button type="button" class="icon-btn danger" onclick="removeSiteLogo()">🗑️ Remove Logo</button>
+        </div>
+        <div class="msg-status" id="brandLogoStatus" style="margin-top:12px"></div>
+      </div>
       <div class="admin-card" style="max-width:420px">
         <h3 style="margin-bottom:14px">Update Security Credential Key</h3>
         <div class="form-grid">
@@ -663,6 +818,7 @@ function renderPostsGrid(sectionId){
       </div>
     </div>`;
   }).join('');
+  markReveal(grid);
 }
 
 function findSectionBySlug(slug){
@@ -677,12 +833,61 @@ async function showPost(id){
     return;
   }
   const sec = sectionsCache.find(s => s.id === p.section_id);
+  const wordCount = (p.content || '').replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
+  const readMins = Math.max(1, Math.round(wordCount / 200));
   document.getElementById('postDetail').innerHTML = `
     ${p.cover_url ? `<div class="cover"><img src="${esc(p.cover_url)}"></div>` : ''}
     <h1>${esc(p.title)}</h1>
-    <div class="meta"><span style="color:var(--accent); font-weight:600">${sec ? esc(sec.name) : 'General'}</span> · ${fmtDate(p.created_at)}</div>
+    <div class="meta">
+      <span style="color:var(--accent); font-weight:600">${sec ? esc(sec.name) : 'General'}</span> · ${fmtDate(p.created_at)}
+      · 📖 ${readMins} min read · 👁️ <span id="postViewCount">${p.views || 0}</span> views
+      <button class="icon-btn" id="shareBtn" style="margin-left:10px; font-size:12px" onclick="sharePost('${p.id}')">🔗 Copy Link</button>
+    </div>
     <div class="post-content">${p.content}</div>
+    <div id="relatedArticles"></div>
   `;
+  bumpPostViews(p.id, p.views || 0);
+  renderRelatedArticles(p, sec);
+}
+
+async function bumpPostViews(id, currentViews){
+  try{
+    await supa.from('posts').update({views: currentViews + 1}).eq('id', id);
+    const el = document.getElementById('postViewCount');
+    if(el) el.textContent = currentViews + 1;
+  }catch(err){ /* views column may not exist yet — safely ignore */ }
+}
+
+function sharePost(id){
+  const url = `${location.origin}${location.pathname}#/post/${id}`;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('shareBtn');
+    if(btn){ const old = btn.textContent; btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = old, 2000); }
+  }).catch(() => alert('Link: ' + url));
+}
+
+function renderRelatedArticles(p, sec){
+  const wrap = document.getElementById('relatedArticles');
+  if(!wrap) return;
+  const related = postsCache.filter(x => x.id !== p.id && x.section_id === p.section_id).slice(0, 3);
+  if(related.length === 0){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `
+    <div style="margin-top:40px; padding-top:30px; border-top:1px solid var(--border)">
+      <h3 style="margin-bottom:16px; font-weight:800">Related Articles${sec ? ' in ' + esc(sec.name) : ''}</h3>
+      <div class="posts-grid">
+        ${related.map(r => `
+          <div class="post-card" onclick="location.hash='#/post/${r.id}'">
+            <div class="post-cover">${r.cover_url ? `<img src="${esc(r.cover_url)}" alt="">` : `<span class="fallback">📝</span>`}</div>
+            <div class="post-body">
+              <div class="post-title">${esc(r.title)}</div>
+              <div class="post-excerpt">${esc(r.excerpt || '')}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  markReveal(wrap);
 }
 
 /* ================== ROUTING ROUTINES ================== */
@@ -749,6 +954,7 @@ function renderSectionPage(sec, slug){
       </div>
     </div>
   `).join('');
+  markReveal(listEl);
 }
 
 /* ================== FORMS & SNEAK CONTROL INTERCEPT ================== */
@@ -776,6 +982,24 @@ document.getElementById('contactForm').addEventListener('submit', async (e) => {
     statusEl.textContent = 'Transmission deployed successfully. Stand by for feedback response!';
     document.getElementById('contactForm').reset();
   }
+});
+
+/* ================== NEWSLETTER SUBSCRIPTION ================== */
+document.getElementById('newsletterForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('newsletterEmail').value.trim();
+  const statusEl = document.getElementById('newsletterStatus');
+  try{
+    const {error} = await supa.from('subscribers').insert({email});
+    if(error) throw error;
+    statusEl.className = 'msg-status ok';
+    statusEl.textContent = '✅ Subscribed successfully!';
+    document.getElementById('newsletterForm').reset();
+  }catch(err){
+    statusEl.className = 'msg-status err';
+    statusEl.textContent = err.code === '23505' ? 'This email is already subscribed.' : 'Subscription failed: ' + err.message;
+  }
+  setTimeout(() => { statusEl.textContent=''; statusEl.className='msg-status'; }, 4000);
 });
 
 /* ================== AUTHORIZATION FLOW SYSTEM ================== */
@@ -916,16 +1140,18 @@ async function loadAdminPosts(){
   const tbody = document.getElementById('postsTableBody');
   tbody.innerHTML = data.map(p => {
     const sec = sectionsCache.find(s => s.id === p.section_id);
+    const isPublished = p.published !== false;
     return `<tr>
       <td style="font-weight:600">${esc(p.title)}</td>
       <td>${sec ? esc(sec.name) : 'General'}</td>
+      <td><span style="font-size:12px; font-weight:600; padding:3px 8px; border-radius:6px; ${isPublished ? 'color:#16a34a; background:rgba(34,197,94,.1)' : 'color:var(--text-dim); background:var(--bg-soft)'}">${isPublished ? '● Published' : '○ Draft'}</span></td>
       <td>${fmtDate(p.created_at)}</td>
       <td class="row-actions">
         <button class="icon-btn" onclick="editPost('${p.id}')">✏️ Modify</button>
         <button class="icon-btn danger" onclick="deletePost('${p.id}')">🗑️ Purge</button>
       </td>
     </tr>`;
-  }).join('') || `<tr><td colspan="4">No technical documents compiled.</td></tr>`;
+  }).join('') || `<tr><td colspan="5">No technical documents compiled.</td></tr>`;
 }
 
 async function editPost(id){
@@ -937,6 +1163,7 @@ async function editPost(id){
   document.getElementById('postSection').value = p.section_id || '';
   document.getElementById('postCover').value = p.cover_url || '';
   document.getElementById('postExcerpt').value = p.excerpt || '';
+  document.getElementById('postPublished').checked = p.published !== false;
   document.getElementById('postContent').innerHTML = p.content || '';
   window.scrollTo(0,0);
 }
@@ -946,6 +1173,30 @@ document.getElementById('burgerBtn').addEventListener('click', () => {
   document.getElementById('navLinks').classList.toggle('open');
 });
 
+/* ================== DARK MODE ================== */
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('themeToggleBtn');
+  if(btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem('theme', theme);
+}
+function toggleTheme(){
+  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+(function initTheme(){
+  const saved = localStorage.getItem('theme');
+  applyTheme(saved || 'light');
+})();
+
+/* ================== SCROLL TO TOP ================== */
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('scrollTopBtn');
+  if(!btn) return;
+  if(window.scrollY > 400) btn.classList.add('show');
+  else btn.classList.remove('show');
+});
+
 function resetPostForm(){
   document.getElementById('postFormTitle').textContent = '➕ Stage New Post';
   document.getElementById('postId').value = '';
@@ -953,6 +1204,7 @@ function resetPostForm(){
   document.getElementById('postSection').value = '';
   document.getElementById('postCover').value = '';
   document.getElementById('postExcerpt').value = '';
+  document.getElementById('postPublished').checked = true;
   document.getElementById('postContent').innerHTML = '';
 }
 
@@ -962,11 +1214,12 @@ async function savePost(){
   const section_id = document.getElementById('postSection').value || null;
   const cover_url = document.getElementById('postCover').value.trim();
   const excerpt = document.getElementById('postExcerpt').value.trim();
+  const published = document.getElementById('postPublished').checked;
   const content = document.getElementById('postContent').innerHTML.trim();
 
   if(!title || !content){ alert('Title parameters and deployment content parameters are strictly required.'); return; }
 
-  const payload = {title, section_id, cover_url, excerpt, content};
+  const payload = {title, section_id, cover_url, excerpt, content, published};
   let error;
   if(id){
     ({error} = await supa.from('posts').update(payload).eq('id', id));
@@ -1060,11 +1313,174 @@ async function changeAdminPassword(){
   document.getElementById('newPassword').value = '';
 }
 
+/* ================== HERO HEADLINE TYPING ANIMATION ================== */
+const heroTypeTokens = (() => {
+  const tokens = [];
+  const push = (str, accent) => { for(const c of str) tokens.push({c, accent}); };
+  push('Welcome to ', false);
+  push('Ah Stack', true);
+  tokens.push({br:true});
+  push('Insights & Tech Roadmaps', false);
+  return tokens;
+})();
+
+function typeHero(){
+  const el = document.getElementById('heroTypeTarget');
+  if(!el) return;
+  el.innerHTML = '<span class="type-cursor"></span>';
+  let i = 0;
+  function step(){
+    if(i <= heroTypeTokens.length){
+      let html = '', curAccent = false, buf = '';
+      const flush = () => { if(buf){ html += curAccent ? '<span>'+esc(buf)+'</span>' : esc(buf); buf=''; } };
+      for(let k=0; k<i; k++){
+        const tok = heroTypeTokens[k];
+        if(tok.br){ flush(); html += '<br>'; }
+        else{
+          if(tok.accent !== curAccent){ flush(); curAccent = tok.accent; }
+          buf += tok.c;
+        }
+      }
+      flush();
+      el.innerHTML = html + '<span class="type-cursor"></span>';
+      i++;
+      setTimeout(step, 35);
+    } else {
+      el.querySelector('.type-cursor')?.remove();
+    }
+  }
+  step();
+}
+
+/* ================== SITE LOGO / BRANDING ================== */
+function applySiteLogo(url){
+  const box = document.getElementById('logoBox');
+  const img = document.getElementById('logoImage');
+  const preview = document.getElementById('brandLogoPreview');
+  const emptyNote = document.getElementById('brandLogoEmptyNote');
+  const avatarCircle = document.getElementById('avatarCircle');
+  if(url){
+    box.style.display = 'none';
+    img.src = url;
+    img.style.display = 'block';
+    if(preview){ preview.src = url; preview.style.display = 'block'; }
+    if(emptyNote) emptyNote.style.display = 'none';
+    if(avatarCircle) avatarCircle.innerHTML = `<img src="${esc(url)}" alt="logo">`;
+  } else {
+    img.style.display = 'none';
+    img.src = '';
+    box.style.display = 'inline-flex';
+    const target = document.getElementById('logoTypeTarget');
+    if(target) target.innerHTML = 'Ah<span>_Stack</span>';
+    if(preview){ preview.style.display = 'none'; preview.src = ''; }
+    if(emptyNote) emptyNote.style.display = 'inline';
+    if(avatarCircle) avatarCircle.innerHTML = '<span id="avatarCircleText">Ah</span>';
+  }
+}
+
+async function loadSiteBranding(){
+  try{
+    const {data, error} = await supa.from('admin_settings').select('logo_url').eq('id', 1).single();
+    if(error) throw error;
+    applySiteLogo(data && data.logo_url ? data.logo_url : '');
+  }catch(err){
+    // Column may not exist yet on the admin_settings table — fall back to default text logo.
+    applySiteLogo('');
+  }
+}
+
+async function uploadSiteLogo(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById('brandLogoStatus');
+  statusEl.className = 'msg-status';
+  statusEl.textContent = '⏳ Uploading logo asset...';
+  try{
+    const url = await uploadFileToStorage(file);
+    const {error} = await supa.from('admin_settings').update({logo_url: url}).eq('id', 1);
+    if(error) throw error;
+    applySiteLogo(url);
+    statusEl.className = 'msg-status ok';
+    statusEl.textContent = '✅ Logo updated successfully.';
+  }catch(err){
+    statusEl.className = 'msg-status err';
+    statusEl.textContent = '❌ Failed to save logo: ' + err.message + ' (make sure column "logo_url" exists on admin_settings table)';
+  }
+  e.target.value = '';
+  setTimeout(() => { statusEl.textContent=''; statusEl.className='msg-status'; }, 5000);
+}
+
+async function removeSiteLogo(){
+  const statusEl = document.getElementById('brandLogoStatus');
+  try{
+    const {error} = await supa.from('admin_settings').update({logo_url: null}).eq('id', 1);
+    if(error) throw error;
+    applySiteLogo('');
+    statusEl.className = 'msg-status ok';
+    statusEl.textContent = '✅ Reverted to default text logo.';
+  }catch(err){
+    statusEl.className = 'msg-status err';
+    statusEl.textContent = '❌ Failed: ' + err.message;
+  }
+  setTimeout(() => { statusEl.textContent=''; statusEl.className='msg-status'; }, 5000);
+}
+
+/* ================== SCROLL REVEAL ANIMATIONS ================== */
+let revealObserver;
+function initRevealObserver(){
+  if(revealObserver) return revealObserver;
+  revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        entry.target.classList.add('in');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, {threshold: 0.1, rootMargin: '0px 0px -40px 0px'});
+  return revealObserver;
+}
+function observeReveal(container){
+  const obs = initRevealObserver();
+  const nodes = container ? container.querySelectorAll('.reveal:not(.in)') : document.querySelectorAll('.reveal:not(.in)');
+  nodes.forEach((el, idx) => {
+    el.style.transitionDelay = Math.min(idx * 70, 420) + 'ms';
+    obs.observe(el);
+  });
+}
+function markReveal(container){
+  const scope = container || document;
+  const isFullPage = (scope === document);
+
+  if(isFullPage){
+    const heroText = document.querySelector('.hero > div:first-child');
+    const heroAvatar = document.querySelector('.hero .avatar-card');
+    if(heroText) heroText.classList.add('reveal', 'reveal-right');
+    if(heroAvatar) heroAvatar.classList.add('reveal', 'reveal-left');
+    document.querySelectorAll('.search-container, .contact-section').forEach(el => {
+      el.classList.add('reveal', 'reveal-left');
+    });
+    document.querySelectorAll('.section-filter').forEach(el => {
+      el.classList.add('reveal', 'reveal-right');
+    });
+  }
+
+  scope.querySelectorAll('.post-card, .section-post-row, .section-hero').forEach((el, idx) => {
+    if(el.classList.contains('reveal')) return;
+    el.classList.add('reveal', idx % 2 === 0 ? 'reveal-left' : 'reveal-right');
+  });
+
+  observeReveal(isFullPage ? document.body : scope);
+}
+
+
 /* ================== INITIATE RUNTIME PIPELINE ================== */
 (async function init(){
+  await loadSiteBranding();
   await loadSections();
   await loadPosts();
   router();
+  markReveal(document);
+  typeHero();
 })();
 </script>
 </body>
