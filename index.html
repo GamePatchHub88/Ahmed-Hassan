@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ahmed Hassan | مدونة تقنية</title>
+<meta name="description" content="مدونة Ahmed Hassan التقنية الشخصية - مقالات وأفكار حول التقنية والبرمجة">
+
+<!--
+=====================================================================
+  إعداد قاعدة البيانات (نفّذ هذا الكود مرة واحدة في Supabase SQL Editor)
+=====================================================================
+
+-- جدول الأقسام
+create table sections (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  slug text not null unique,
+  sort_order int default 0,
+  created_at timestamptz default now()
+);
+
+-- جدول المقالات
+create table posts (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  content text not null,
+  excerpt text,
+  cover_url text,
+  section_id uuid references sections(id) on delete set null,
+  published boolean default true,
+  created_at timestamptz default now()
+);
+
+-- جدول الرسائل
+create table messages (
+  id uuid primary key default gen_random_uuid(),
+  sender_name text,
+  email text,
+  message text,
+  created_at timestamptz default now()
+);
+
+-- جدول إعدادات الأدمن (كلمة مرور واحدة فقط)
+create table admin_settings (
+  id int primary key default 1,
+  password text not null
+);
+insert into admin_settings (id, password) values (1, 'ChangeMe123!');
+
+-- تفعيل RLS
+alter table sections enable row level security;
+alter table posts enable row level security;
+alter table messages enable row level security;
+alter table admin_settings enable row level security;
+
+-- سياسات القراءة العامة
+create policy "public read sections" on sections for select using (true);
+create policy "public read posts" on posts for select using (true);
+
+-- سياسات الكتابة العامة (مبسّطة - لأن التحقق من الأدمن يتم في الواجهة)
+create policy "public insert sections" on sections for insert with check (true);
+create policy "public update sections" on sections for update using (true);
+create policy "public delete sections" on sections for delete using (true);
+
+create policy "public insert posts" on posts for insert with check (true);
+create policy "public update posts" on posts for update using (true);
+create policy "public delete posts" on posts for delete using (true);
+
+create policy "public insert messages" on messages for insert with check (true);
+create policy "public read messages" on messages for select using (true);
+create policy "public delete messages" on messages for delete using (true);
+
+create policy "public read admin_settings" on admin_settings for select using (true);
+create policy "public update admin_settings" on admin_settings for update using (true);
+
+=====================================================================
+-->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg: #0f1220;
+  --bg-soft: #161a2e;
+  --card: #1b2036;
+  --border: #2a2f4a;
+  --text: #eef0fb;
+  --text-dim: #9aa0c0;
+  --accent: #7c5cff;
+  --accent2: #22d3ee;
+  --accent3: #ff6b9d;
+  --radius: 16px;
+  --shadow: 0 10px 30px rgba(0,0,0,.35);
+  font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+}
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*{box-sizing:border-box; margin:0; padding:0}
+body{
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,.25), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(34,211,238,.18), transparent 55%),
+    var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  line-height:1.7;
+}
+a{color:inherit; text-decoration:none}
+img{max-width:100%; display:block}
+::selection{background:var(--accent); color:#fff}
+
+/* ===== Header ===== */
+header{
+  position:sticky; top:0; z-index:50;
+  background:rgba(15,18,32,.75);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+}
+.nav-wrap{
+  max-width:1100px; margin:0 auto; padding:16px 20px;
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+}
+.brand{
+  display:flex; align-items:center; gap:10px; font-weight:800; font-size:20px;
+}
+.brand .dot{
+  width:12px; height:12px; border-radius:50%;
+  background:linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow:0 0 16px var(--accent);
+}
+nav.links{display:flex; gap:22px; flex-wrap:wrap}
+nav.links a{
+  color:var(--text-dim); font-weight:600; font-size:15px; position:relative; padding:4px 0;
+  transition:.2s;
+}
+nav.links a:hover, nav.links a.active{color:var(--text)}
+nav.links a::after{
+  content:''; position:absolute; right:0; bottom:-4px; width:0; height:2px;
+  background:linear-gradient(90deg, var(--accent), var(--accent2));
+  transition:.25s;
+}
+nav.links a:hover::after, nav.links a.active::after{width:100%}
+.burger{display:none; background:none; border:1px solid var(--border); color:var(--text); border-radius:10px; padding:8px 12px; font-size:18px; cursor:pointer}
+
+/* ===== Hero ===== */
+.hero{
+  max-width:1100px; margin:0 auto; padding:70px 20px 40px;
+  display:grid; grid-template-columns:1.2fr .8fr; gap:40px; align-items:center;
+}
+.hero h1{
+  font-size:44px; font-weight:800; line-height:1.25; margin-bottom:16px;
+}
+.hero h1 span{
+  background:linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.hero p{color:var(--text-dim); font-size:17px; max-width:520px}
+.hero .badges{display:flex; gap:10px; margin-top:22px; flex-wrap:wrap}
+.badge{
+  padding:7px 14px; border-radius:999px; font-size:13px; font-weight:600;
+  border:1px solid var(--border); background:var(--card); color:var(--text-dim);
+}
+.avatar-card{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  padding:26px; text-align:center; box-shadow:var(--shadow);
+}
+.avatar-circle{
+  width:110px; height:110px; border-radius:50%; margin:0 auto 16px;
+  background:linear-gradient(135deg, var(--accent), var(--accent3));
+  display:flex; align-items:center; justify-content:center;
+  font-size:42px; font-weight:800; color:#fff;
+}
+.avatar-card h3{font-size:20px; margin-bottom:4px}
+.avatar-card p{color:var(--text-dim); font-size:14px}
+
+/* ===== Sections filter ===== */
+.section-filter{
+  max-width:1100px; margin:0 auto; padding:0 20px 20px;
+  display:flex; gap:10px; flex-wrap:wrap;
+}
+.chip{
+  padding:8px 16px; border-radius:999px; border:1px solid var(--border);
+  background:var(--card); color:var(--text-dim); font-weight:600; font-size:14px; cursor:pointer;
+  transition:.2s;
+}
+.chip:hover{border-color:var(--accent)}
+.chip.active{
+  background:linear-gradient(135deg, var(--accent), var(--accent2)); color:#fff; border-color:transparent;
+}
+
+/* ===== صفحة القسم المستقلة (تصميم مختلف عن الرئيسية) ===== */
+.section-banner{
+  max-width:1100px; margin:0 auto; padding:50px 20px 30px;
+}
+.section-banner .crumb{color:var(--text-dim); font-size:14px; margin-bottom:16px; display:flex; align-items:center; gap:6px}
+.section-banner .crumb a{color:var(--accent2); font-weight:600; cursor:pointer}
+.section-hero{
+  background:linear-gradient(120deg, rgba(255,107,157,.16), rgba(124,92,255,.16));
+  border:1px solid var(--border); border-radius:var(--radius); padding:36px 30px;
+  display:flex; align-items:center; gap:22px;
+}
+.section-hero .icon{
+  width:64px; height:64px; border-radius:18px; flex-shrink:0;
+  background:linear-gradient(135deg, var(--accent3), var(--accent));
+  display:flex; align-items:center; justify-content:center; font-size:30px;
+}
+.section-hero h1{font-size:30px; margin-bottom:6px}
+.section-hero p{color:var(--text-dim); font-size:15px}
+.section-list{max-width:1100px; margin:0 auto; padding:30px 20px 20px; display:flex; flex-direction:column; gap:16px}
+.section-post-row{
+  display:flex; gap:20px; background:var(--card); border:1px solid var(--border); border-radius:14px;
+  padding:18px; cursor:pointer; transition:.2s; align-items:center;
+}
+.section-post-row:hover{border-color:var(--accent3); transform:translateX(-3px)}
+.section-post-row .thumb{
+  width:110px; height:80px; border-radius:10px; overflow:hidden; flex-shrink:0;
+  background:linear-gradient(135deg, rgba(255,107,157,.3), rgba(124,92,255,.25));
+  display:flex; align-items:center; justify-content:center; font-size:26px;
+}
+.section-post-row .thumb img{width:100%; height:100%; object-fit:cover}
+.section-post-row .info{flex:1; min-width:0}
+.section-post-row .info .t{font-size:17px; font-weight:700; margin-bottom:4px}
+.section-post-row .info .e{color:var(--text-dim); font-size:14px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
+.section-post-row .info .d{color:var(--text-dim); font-size:12px; margin-top:6px}
+
+/* ===== Posts grid ===== */
+main{max-width:1100px; margin:0 auto; padding:20px}
+.posts-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:24px;
+  margin-top:10px;
+}
+.post-card{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  overflow:hidden; display:flex; flex-direction:column; cursor:pointer;
+  transition:.25s; box-shadow:var(--shadow);
+}
+.post-card:hover{transform:translateY(-6px); border-color:var(--accent)}
+.post-cover{
+  height:170px; background:linear-gradient(135deg, rgba(124,92,255,.35), rgba(34,211,238,.25));
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+}
+.post-cover img{width:100%; height:100%; object-fit:cover}
+.post-cover .fallback{font-size:40px}
+.post-body{padding:18px; display:flex; flex-direction:column; gap:8px; flex:1}
+.post-tag{font-size:12px; font-weight:700; color:var(--accent2)}
+.post-title{font-size:18px; font-weight:700}
+.post-excerpt{color:var(--text-dim); font-size:14px; flex:1}
+.post-meta{font-size:12px; color:var(--text-dim); display:flex; justify-content:space-between; margin-top:6px; border-top:1px solid var(--border); padding-top:10px}
+.empty-state{
+  text-align:center; padding:60px 20px; color:var(--text-dim);
+}
+
+/* ===== Post view ===== */
+.post-view{max-width:760px; margin:0 auto; padding:40px 20px}
+.back-btn{
+  display:inline-flex; align-items:center; gap:6px; color:var(--accent2); font-weight:700;
+  margin-bottom:24px; cursor:pointer;
+}
+.post-view .cover{border-radius:var(--radius); overflow:hidden; margin-bottom:24px; max-height:360px}
+.post-view h1{font-size:32px; margin-bottom:10px}
+.post-view .meta{color:var(--text-dim); font-size:14px; margin-bottom:26px}
+.post-content{font-size:17px; color:#e5e7f5}
+.post-content img{max-width:100%; border-radius:12px; margin:16px 0; display:block}
+.post-content blockquote{border-right:3px solid var(--accent); padding:8px 16px; color:var(--text-dim); margin:14px 0}
+.post-content ul, .post-content ol{margin:10px 24px}
+.post-content h2, .post-content h3{margin:24px 0 10px; color:var(--text)}
+.post-content p{margin-bottom:14px}
+
+/* ===== Contact ===== */
+.contact-section{
+  max-width:1100px; margin:60px auto; padding:40px 20px;
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+}
+.contact-section h2{font-size:26px; margin-bottom:8px}
+.contact-section p.sub{color:var(--text-dim); margin-bottom:24px}
+.contact-form{display:grid; gap:14px; max-width:520px}
+.contact-form input, .contact-form textarea{
+  background:var(--bg-soft); border:1px solid var(--border); color:var(--text);
+  padding:13px 16px; border-radius:12px; font-family:inherit; font-size:15px; resize:vertical;
+}
+.contact-form input:focus, .contact-form textarea:focus{outline:none; border-color:var(--accent)}
+.btn{
+  background:linear-gradient(135deg, var(--accent), var(--accent2)); color:#fff; border:none;
+  padding:13px 22px; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer;
+  transition:.2s; width:fit-content;
+}
+.btn:hover{filter:brightness(1.1); transform:translateY(-1px)}
+.btn.secondary{background:var(--bg-soft); border:1px solid var(--border); color:var(--text)}
+.btn.danger{background:linear-gradient(135deg,#ff5f6d,#ff6b9d)}
+.msg-status{font-size:14px; padding:10px 14px; border-radius:10px; display:none}
+.msg-status.ok{background:rgba(34,197,94,.15); color:#4ade80; display:block}
+.msg-status.err{background:rgba(239,68,68,.15); color:#f87171; display:block}
+
+footer{text-align:center; padding:40px 20px; color:var(--text-dim); font-size:14px; border-top:1px solid var(--border); margin-top:40px}
+
+/* ===== Modal (admin login) ===== */
+.modal-backdrop{
+  position:fixed; inset:0; background:rgba(5,6,15,.75); backdrop-filter:blur(4px);
+  display:none; align-items:center; justify-content:center; z-index:200; padding:20px;
+}
+.modal-backdrop.show{display:flex}
+.modal{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  padding:32px; max-width:400px; width:100%; box-shadow:var(--shadow);
+}
+.modal h3{font-size:20px; margin-bottom:6px}
+.modal p{color:var(--text-dim); font-size:14px; margin-bottom:20px}
+.modal input{
+  width:100%; background:var(--bg-soft); border:1px solid var(--border); color:var(--text);
+  padding:13px 16px; border-radius:12px; margin-bottom:14px; font-size:15px;
+}
+.modal .row{display:flex; gap:10px}
+
+/* ===== Admin Dashboard ===== */
+#admin-page{display:none}
+.admin-shell{max-width:1200px; margin:0 auto; padding:20px}
+.admin-header{
+  display:flex; justify-content:space-between; align-items:center; margin-bottom:26px;
+  padding-bottom:18px; border-bottom:1px solid var(--border);
+}
+.admin-header h1{font-size:24px}
+.admin-tabs{display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap}
+.admin-tab{
+  padding:10px 18px; border-radius:12px; border:1px solid var(--border); background:var(--card);
+  color:var(--text-dim); font-weight:700; cursor:pointer;
+}
+.admin-tab.active{background:linear-gradient(135deg, var(--accent), var(--accent2)); color:#fff; border-color:transparent}
+.admin-panel{display:none}
+.admin-panel.active{display:block}
+.admin-card{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:22px; margin-bottom:18px;
+}
+.form-grid{display:grid; gap:12px; margin-bottom:16px}
+.form-grid input, .form-grid textarea, .form-grid select{
+  background:var(--bg-soft); border:1px solid var(--border); color:var(--text);
+  padding:12px 14px; border-radius:10px; font-family:inherit; font-size:14px; width:100%;
+}
+.form-grid textarea{min-height:200px; resize:vertical; font-family:'JetBrains Mono', monospace}
+
+/* ===== محرر المقال الغني (Rich Editor) ===== */
+.editor-wrap{border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--bg-soft)}
+.editor-toolbar{
+  display:flex; gap:6px; flex-wrap:wrap; padding:8px; background:var(--card);
+  border-bottom:1px solid var(--border);
+}
+.editor-toolbar button{
+  background:var(--bg-soft); border:1px solid var(--border); color:var(--text);
+  width:34px; height:34px; border-radius:8px; cursor:pointer; font-size:15px;
+  display:flex; align-items:center; justify-content:center; transition:.15s;
+}
+.editor-toolbar button:hover{border-color:var(--accent); color:var(--accent2)}
+.editor-toolbar .sep{width:1px; background:var(--border); margin:2px 4px}
+.editor-toolbar input[type="file"]{display:none}
+.editor-area{
+  min-height:260px; max-height:520px; overflow-y:auto; padding:16px; font-size:15px;
+  color:var(--text); line-height:1.8; outline:none;
+}
+.editor-area img{max-width:100%; border-radius:10px; margin:10px 0; display:block}
+.editor-area h2, .editor-area h3{margin:14px 0 8px}
+.editor-area blockquote{
+  border-right:3px solid var(--accent); padding:6px 14px; color:var(--text-dim); margin:10px 0;
+}
+.editor-area p{margin-bottom:10px}
+.editor-area:empty::before{content:attr(data-placeholder); color:var(--text-dim)}
+.upload-status{font-size:12px; color:var(--accent2); padding:4px 8px}
+table{width:100%; border-collapse:collapse}
+th, td{padding:12px; text-align:right; border-bottom:1px solid var(--border); font-size:14px}
+th{color:var(--text-dim); font-weight:700}
+.row-actions{display:flex; gap:8px}
+.icon-btn{
+  background:var(--bg-soft); border:1px solid var(--border); color:var(--text);
+  padding:6px 12px; border-radius:8px; cursor:pointer; font-size:13px;
+}
+.icon-btn.danger{color:#f87171; border-color:rgba(248,113,113,.3)}
+.icon-btn:hover{border-color:var(--accent)}
+
+@media (max-width:800px){
+  .hero{grid-template-columns:1fr}
+  .hero h1{font-size:32px}
+  nav.links{
+    position:fixed; top:64px; left:0; right:0; background:var(--bg-soft);
+    flex-direction:column; padding:20px; border-bottom:1px solid var(--border);
+    transform:translateY(-120%); transition:.25s; gap:16px;
+  }
+  nav.links.open{transform:translateY(0)}
+  .burger{display:block}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== الموقع العام ===================== -->
+<div id="site-page">
+  <header>
+    <div class="nav-wrap">
+      <a href="#/" class="brand"><span class="dot"></span> Ahmed Hassan</a>
+      <button class="burger" id="burgerBtn">☰</button>
+      <nav class="links" id="navLinks">
+        <a href="#/" class="nav-link active" data-view="home">الرئيسية</a>
+        <span id="dynamicNavLinks"></span>
+        <a href="#/contact" class="nav-link" data-view="contact">تواصل معي</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- الصفحة الرئيسية -->
+  <div id="view-home">
+    <section class="hero">
+      <div>
+        <h1>مرحبًا، أنا <span>Ahmed Hassan</span><br>مطوّر أكتب عن التقنية</h1>
+        <p>مدونة شخصية أشارك فيها أفكاري وتجاربي في عالم البرمجة والتقنية، بأسلوب بسيط ومباشر.</p>
+        <div class="badges">
+          <span class="badge">💻 برمجة</span>
+          <span class="badge">⚡ تقنية</span>
+          <span class="badge">📝 مقالات دورية</span>
+        </div>
+      </div>
+      <div class="avatar-card">
+        <div class="avatar-circle">AH</div>
+        <h3>Ahmed Hassan</h3>
+        <p>مطوّر ومدوّن تقني</p>
+      </div>
+    </section>
+
+    <div class="section-filter" id="sectionFilter">
+      <span class="chip active" data-section="all">الكل</span>
+    </div>
+
+    <main>
+      <div class="posts-grid" id="postsGrid">
+        <div class="empty-state">جاري تحميل المقالات...</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- صفحة القسم المستقلة -->
+  <div id="view-section" style="display:none">
+    <div class="section-banner">
+      <div class="crumb"><a onclick="location.hash='#/'">الرئيسية</a> <span>←</span> <span id="secCrumbName"></span></div>
+      <div class="section-hero">
+        <div class="icon">🗂️</div>
+        <div>
+          <h1 id="secTitle">القسم</h1>
+          <p id="secDesc">كل المقالات المنشورة في هذا القسم</p>
+        </div>
+      </div>
+    </div>
+    <div class="section-list" id="sectionPostsList"></div>
+  </div>
+
+  <!-- عرض المقال -->
+  <div id="view-post" style="display:none">
+    <div class="post-view">
+      <span class="back-btn" onclick="location.hash='#/'">→ العودة إلى المقالات</span>
+      <div id="postDetail"></div>
+    </div>
+  </div>
+
+  <!-- صفحة التواصل -->
+  <div id="view-contact" style="display:none">
+    <div class="contact-section" style="margin-top:60px">
+      <h2>تواصل معي</h2>
+      <p class="sub">لديك سؤال أو اقتراح؟ راسلني من هنا.</p>
+      <form class="contact-form" id="contactForm">
+        <input type="text" id="senderName" placeholder="اسمك" required>
+        <input type="email" id="senderEmail" placeholder="بريدك الإلكتروني" required>
+        <textarea id="senderMessage" placeholder="رسالتك..." rows="5" required></textarea>
+        <button type="submit" class="btn">إرسال الرسالة</button>
+        <div class="msg-status" id="msgStatus"></div>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    © 2026 Ahmed Hassan — جميع الحقوق محفوظة
+  </footer>
+</div>
+
+<!-- ===================== نافذة تسجيل دخول الأدمن ===================== -->
+<div class="modal-backdrop" id="adminModal">
+  <div class="modal">
+    <h3>🔒 دخول لوحة التحكم</h3>
+    <p>أدخل كلمة المرور للمتابعة</p>
+    <input type="password" id="adminPassInput" placeholder="كلمة المرور">
+    <div class="msg-status" id="adminLoginError" style="margin-bottom:12px"></div>
+    <div class="row">
+      <button class="btn" onclick="tryAdminLogin()">دخول</button>
+      <button class="btn secondary" onclick="closeAdminModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== لوحة تحكم الأدمن ===================== -->
+<div id="admin-page">
+  <div class="admin-shell">
+    <div class="admin-header">
+      <h1>⚙️ لوحة التحكم</h1>
+      <div class="row-actions">
+        <button class="icon-btn" onclick="goToSite()">↩ عرض الموقع</button>
+        <button class="icon-btn danger" onclick="adminLogout()">تسجيل الخروج</button>
+      </div>
+    </div>
+
+    <div class="admin-tabs">
+      <div class="admin-tab active" data-tab="posts" onclick="switchAdminTab('posts')">📝 المقالات</div>
+      <div class="admin-tab" data-tab="sections" onclick="switchAdminTab('sections')">🗂️ الأقسام</div>
+      <div class="admin-tab" data-tab="messages" onclick="switchAdminTab('messages')">✉️ الرسائل</div>
+      <div class="admin-tab" data-tab="settings" onclick="switchAdminTab('settings')">🔑 الإعدادات</div>
+    </div>
+
+    <!-- تبويب المقالات -->
+    <div class="admin-panel active" id="panel-posts">
+      <div class="admin-card">
+        <h3 style="margin-bottom:14px" id="postFormTitle">➕ إضافة مقال جديد</h3>
+        <input type="hidden" id="postId">
+        <div class="form-grid">
+          <input type="text" id="postTitle" placeholder="عنوان المقال">
+          <select id="postSection"></select>
+          <div style="display:flex; gap:10px; align-items:center">
+            <input type="text" id="postCover" placeholder="رابط صورة الغلاف (اختياري)" style="flex:1">
+            <button type="button" class="icon-btn" onclick="document.getElementById('coverUploadInput').click()">📤 رفع صورة غلاف</button>
+            <input type="file" id="coverUploadInput" accept="image/*" style="display:none" onchange="uploadCoverImage(event)">
+          </div>
+          <textarea id="postExcerpt" placeholder="مقتطف قصير يظهر في القائمة" style="min-height:80px"></textarea>
+
+          <label style="font-size:13px; color:var(--text-dim); margin-top:4px">محتوى المقال</label>
+          <div class="editor-wrap">
+            <div class="editor-toolbar">
+              <button type="button" title="عريض" onclick="fmt('bold')"><b>B</b></button>
+              <button type="button" title="مائل" onclick="fmt('italic')"><i>I</i></button>
+              <button type="button" title="خط تحت" onclick="fmt('underline')"><u>U</u></button>
+              <div class="sep"></div>
+              <button type="button" title="عنوان كبير" onclick="fmt('formatBlock','H2')">H2</button>
+              <button type="button" title="عنوان صغير" onclick="fmt('formatBlock','H3')">H3</button>
+              <button type="button" title="اقتباس" onclick="fmt('formatBlock','BLOCKQUOTE')">❝</button>
+              <button type="button" title="فقرة عادية" onclick="fmt('formatBlock','P')">¶</button>
+              <div class="sep"></div>
+              <button type="button" title="قائمة نقطية" onclick="fmt('insertUnorderedList')">•≡</button>
+              <button type="button" title="قائمة مرقمة" onclick="fmt('insertOrderedList')">1≡</button>
+              <div class="sep"></div>
+              <button type="button" title="رابط" onclick="insertLink()">🔗</button>
+              <button type="button" title="إدراج صورة برابط" onclick="insertImageByUrl()">🖼️</button>
+              <button type="button" title="رفع صورة من جهازك" onclick="document.getElementById('contentImgInput').click()">📤</button>
+              <input type="file" id="contentImgInput" accept="image/*" onchange="uploadContentImage(event)">
+              <div class="sep"></div>
+              <button type="button" title="تراجع" onclick="fmt('undo')">↩</button>
+              <span class="upload-status" id="uploadStatus"></span>
+            </div>
+            <div class="editor-area" id="postContent" contenteditable="true" data-placeholder="اكتب محتوى المقال هنا... يمكنك إدراج صور مباشرة داخل النص"></div>
+          </div>
+        </div>
+        <div class="row-actions" style="margin-top:14px">
+          <button class="btn" onclick="savePost()">💾 حفظ المقال</button>
+          <button class="btn secondary" onclick="resetPostForm()">مسح النموذج</button>
+        </div>
+      </div>
+      <div class="admin-card">
+        <h3 style="margin-bottom:14px">قائمة المقالات</h3>
+        <table>
+          <thead><tr><th>العنوان</th><th>القسم</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
+          <tbody id="postsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- تبويب الأقسام -->
+    <div class="admin-panel" id="panel-sections">
+      <div class="admin-card">
+        <h3 style="margin-bottom:14px">➕ إضافة قسم جديد</h3>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr; display:grid">
+          <input type="text" id="sectionName" placeholder="اسم القسم (مثال: الذكاء الاصطناعي)">
+          <input type="text" id="sectionSlug" placeholder="slug بالإنجليزية (مثال: ai)">
+        </div>
+        <button class="btn" onclick="addSection()">إضافة القسم</button>
+      </div>
+      <div class="admin-card">
+        <h3 style="margin-bottom:14px">الأقسام الحالية</h3>
+        <table>
+          <thead><tr><th>الاسم</th><th>Slug</th><th>إجراءات</th></tr></thead>
+          <tbody id="sectionsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- تبويب الرسائل -->
+    <div class="admin-panel" id="panel-messages">
+      <div class="admin-card">
+        <h3 style="margin-bottom:14px">الرسائل الواردة</h3>
+        <table>
+          <thead><tr><th>الاسم</th><th>البريد</th><th>الرسالة</th><th>التاريخ</th><th></th></tr></thead>
+          <tbody id="messagesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- تبويب الإعدادات -->
+    <div class="admin-panel" id="panel-settings">
+      <div class="admin-card" style="max-width:420px">
+        <h3 style="margin-bottom:14px">تغيير كلمة المرور</h3>
+        <div class="form-grid">
+          <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
+        </div>
+        <button class="btn" onclick="changeAdminPassword()">تحديث كلمة المرور</button>
+        <div class="msg-status" id="settingsStatus" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================== إعداد Supabase ================== */
+const SUPABASE_URL = "https://wgcfajrwfmunwoqmneww.supabase.co";
+const SUPABASE_KEY = "sb_publishable_suydYW04acUwgjkSsBwT3w_-7z650gm";
+const supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let ADMIN_TRIGGER = "123456789";
+let sectionsCache = [];
+let postsCache = [];
+
+/* ================== أدوات مساعدة ================== */
+function esc(str){
+  if(!str) return "";
+  return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function fmtDate(d){
+  return new Date(d).toLocaleDateString('ar-EG', {year:'numeric', month:'long', day:'numeric'});
+}
+
+/* ================== تحميل البيانات العامة ================== */
+async function loadSections(){
+  const {data, error} = await supa.from('sections').select('*').order('sort_order', {ascending:true});
+  if(error){ console.error(error); return; }
+  sectionsCache = data || [];
+  renderSectionFilter();
+  renderNavSections();
+  fillSectionSelect();
+}
+
+async function loadPosts(){
+  const {data, error} = await supa.from('posts').select('*').eq('published', true).order('created_at', {ascending:false});
+  if(error){ console.error(error); return; }
+  postsCache = data || [];
+  renderPostsGrid('all');
+}
+
+function renderSectionFilter(){
+  const el = document.getElementById('sectionFilter');
+  el.innerHTML = `<span class="chip active" data-section="all" onclick="filterPosts('all', this)">الكل</span>` +
+    sectionsCache.map(s => `<span class="chip" data-section="${s.id}" onclick="location.hash='#/section/${s.slug}'">${esc(s.name)}</span>`).join('');
+}
+
+function renderNavSections(){
+  const el = document.getElementById('dynamicNavLinks');
+  el.innerHTML = sectionsCache.map(s =>
+    `<a href="#/section/${s.slug}" class="nav-link">${esc(s.name)}</a>`
+  ).join('');
+}
+
+function filterPosts(sectionId, chipEl){
+  document.querySelectorAll('#sectionFilter .chip').forEach(c => c.classList.remove('active'));
+  if(chipEl) chipEl.classList.add('active');
+  renderPostsGrid(sectionId);
+}
+
+function renderPostsGrid(sectionId){
+  const grid = document.getElementById('postsGrid');
+  let list = postsCache;
+  if(sectionId && sectionId !== 'all'){
+    list = postsCache.filter(p => p.section_id === sectionId);
+  }
+  if(list.length === 0){
+    grid.innerHTML = `<div class="empty-state">لا توجد مقالات بعد 🙂</div>`;
+    return;
+  }
+  grid.innerHTML = list.map(p => {
+    const sec = sectionsCache.find(s => s.id === p.section_id);
+    return `
+    <div class="post-card" onclick="location.hash='#/post/${p.id}'">
+      <div class="post-cover">
+        ${p.cover_url ? `<img src="${esc(p.cover_url)}" alt="">` : `<span class="fallback">📝</span>`}
+      </div>
+      <div class="post-body">
+        <span class="post-tag">${sec ? esc(sec.name) : 'عام'}</span>
+        <div class="post-title">${esc(p.title)}</div>
+        <div class="post-excerpt">${esc(p.excerpt || '')}</div>
+        <div class="post-meta"><span>${fmtDate(p.created_at)}</span><span>اقرأ →</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function findSectionBySlug(slug){
+  return sectionsCache.find(s => s.slug === slug);
+}
+
+/* ================== عرض مقال منفرد ================== */
+async function showPost(id){
+  const {data: p, error} = await supa.from('posts').select('*').eq('id', id).single();
+  if(error || !p){
+    document.getElementById('postDetail').innerHTML = `<div class="empty-state">المقال غير موجود</div>`;
+    return;
+  }
+  const sec = sectionsCache.find(s => s.id === p.section_id);
+  document.getElementById('postDetail').innerHTML = `
+    ${p.cover_url ? `<div class="cover"><img src="${esc(p.cover_url)}"></div>` : ''}
+    <h1>${esc(p.title)}</h1>
+    <div class="meta">${sec ? esc(sec.name) : 'عام'} · ${fmtDate(p.created_at)}</div>
+    <div class="post-content">${p.content}</div>
+  `;
+}
+
+/* ================== التوجيه (Routing) ================== */
+function router(){
+  const hash = location.hash || '#/';
+  document.getElementById('view-home').style.display = 'none';
+  document.getElementById('view-section').style.display = 'none';
+  document.getElementById('view-post').style.display = 'none';
+  document.getElementById('view-contact').style.display = 'none';
+  document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
+
+  if(hash.startsWith('#/post/')){
+    const id = hash.replace('#/post/', '');
+    document.getElementById('view-post').style.display = 'block';
+    showPost(id);
+    window.scrollTo(0,0);
+  } else if(hash.startsWith('#/section/')){
+    const slug = hash.replace('#/section/', '');
+    const sec = findSectionBySlug(slug);
+    document.getElementById('view-section').style.display = 'block';
+    renderSectionPage(sec, slug);
+    window.scrollTo(0,0);
+  } else if(hash === '#/contact'){
+    document.getElementById('view-contact').style.display = 'block';
+    const link = document.querySelector('.nav-link[data-view="contact"]');
+    if(link) link.classList.add('active');
+  } else {
+    document.getElementById('view-home').style.display = 'block';
+    const link = document.querySelector('.nav-link[data-view="home"]');
+    if(link) link.classList.add('active');
+  }
+  document.getElementById('navLinks').classList.remove('open');
+}
+window.addEventListener('hashchange', router);
+
+/* ================== صفحة القسم المستقلة ================== */
+const SECTION_ICONS = ['🗂️','💡','⚙️','🚀','📡','🧠','🔧','📚'];
+function renderSectionPage(sec, slug){
+  const listEl = document.getElementById('sectionPostsList');
+  document.getElementById('secTitle').textContent = sec ? sec.name : 'قسم غير معروف';
+  document.getElementById('secCrumbName').textContent = sec ? sec.name : slug;
+  document.getElementById('secDesc').textContent = sec
+    ? `كل المقالات المنشورة في قسم ${sec.name}`
+    : 'لم يتم العثور على هذا القسم';
+  const iconIdx = sec ? (sectionsCache.findIndex(s => s.id === sec.id) % SECTION_ICONS.length) : 0;
+  document.querySelector('.section-hero .icon').textContent = SECTION_ICONS[iconIdx] || '🗂️';
+
+  if(!sec){
+    listEl.innerHTML = `<div class="empty-state">القسم غير موجود</div>`;
+    return;
+  }
+  const list = postsCache.filter(p => p.section_id === sec.id);
+  if(list.length === 0){
+    listEl.innerHTML = `<div class="empty-state">لا توجد مقالات في هذا القسم بعد 🙂</div>`;
+    return;
+  }
+  listEl.innerHTML = list.map(p => `
+    <div class="section-post-row" onclick="location.hash='#/post/${p.id}'">
+      <div class="thumb">${p.cover_url ? `<img src="${esc(p.cover_url)}">` : '📝'}</div>
+      <div class="info">
+        <div class="t">${esc(p.title)}</div>
+        <div class="e">${esc(p.excerpt || '')}</div>
+        <div class="d">${fmtDate(p.created_at)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ================== نموذج التواصل + المصيدة السرية للأدمن ================== */
+document.getElementById('contactForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('senderName').value.trim();
+  const email = document.getElementById('senderEmail').value.trim();
+  const message = document.getElementById('senderMessage').value.trim();
+
+  // المصيدة السرية لدخول الأدمن
+  if(name === ADMIN_TRIGGER){
+    document.getElementById('senderName').value = '';
+    document.getElementById('contactForm').reset();
+    openAdminModal();
+    return;
+  }
+
+  const statusEl = document.getElementById('msgStatus');
+  const {error} = await supa.from('messages').insert({sender_name: name, email, message});
+  if(error){
+    statusEl.className = 'msg-status err';
+    statusEl.textContent = 'حدث خطأ أثناء الإرسال، حاول مرة أخرى.';
+  } else {
+    statusEl.className = 'msg-status ok';
+    statusEl.textContent = 'تم إرسال رسالتك بنجاح! سأرد عليك قريبًا 🙏';
+    document.getElementById('contactForm').reset();
+  }
+});
+
+/* ================== نظام دخول الأدمن ================== */
+function openAdminModal(){
+  document.getElementById('adminModal').classList.add('show');
+  document.getElementById('adminPassInput').value = '';
+  document.getElementById('adminLoginError').className = 'msg-status';
+  document.getElementById('adminPassInput').focus();
+}
+function closeAdminModal(){
+  document.getElementById('adminModal').classList.remove('show');
+}
+
+async function tryAdminLogin(){
+  const input = document.getElementById('adminPassInput').value;
+  const errEl = document.getElementById('adminLoginError');
+  const {data, error} = await supa.from('admin_settings').select('password').eq('id', 1).single();
+  if(error || !data){
+    errEl.className = 'msg-status err';
+    errEl.textContent = 'خطأ في الاتصال بالخادم';
+    return;
+  }
+  if(input === data.password){
+    sessionStorage.setItem('is_admin', 'true');
+    closeAdminModal();
+    goToAdmin();
+  } else {
+    errEl.className = 'msg-status err';
+    errEl.textContent = 'كلمة المرور غير صحيحة';
+  }
+}
+
+// دعم مفتاح Enter في نافذة الدخول
+document.getElementById('adminPassInput').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') tryAdminLogin();
+});
+
+function isAdmin(){ return sessionStorage.getItem('is_admin') === 'true'; }
+
+function goToAdmin(){
+  if(!isAdmin()){ openAdminModal(); return; }
+  document.getElementById('site-page').style.display = 'none';
+  document.getElementById('admin-page').style.display = 'block';
+  loadAdminData();
+}
+function goToSite(){
+  document.getElementById('admin-page').style.display = 'none';
+  document.getElementById('site-page').style.display = 'block';
+  loadSections();
+  loadPosts();
+  router();
+}
+function adminLogout(){
+  sessionStorage.removeItem('is_admin');
+  goToSite();
+}
+
+/* ================== تبويبات لوحة التحكم ================== */
+function switchAdminTab(tab){
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.admin-tab[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+async function loadAdminData(){
+  await loadSections();
+  await loadAdminPosts();
+  await loadAdminSections();
+  await loadAdminMessages();
+}
+
+/* ================== محرر المقال الغني ================== */
+function fmt(cmd, value=null){
+  document.getElementById('postContent').focus();
+  document.execCommand(cmd, false, value);
+}
+
+function insertLink(){
+  const url = prompt('أدخل رابط URL:');
+  if(url) fmt('createLink', url);
+}
+
+function insertImageByUrl(){
+  const url = prompt('أدخل رابط الصورة (URL):');
+  if(url) fmt('insertImage', url);
+}
+
+const STORAGE_BUCKET = 'post-images';
+
+async function uploadFileToStorage(file){
+  const ext = file.name.split('.').pop();
+  const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+  const {error} = await supa.storage.from(STORAGE_BUCKET).upload(path, file);
+  if(error) throw error;
+  const {data} = supa.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+async function uploadContentImage(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById('uploadStatus');
+  statusEl.textContent = '⏳ جاري رفع الصورة...';
+  try{
+    const url = await uploadFileToStorage(file);
+    document.getElementById('postContent').focus();
+    document.execCommand('insertImage', false, url);
+    statusEl.textContent = '✅ تم إدراج الصورة';
+  }catch(err){
+    statusEl.textContent = '❌ فشل الرفع: ' + err.message;
+  }
+  e.target.value = '';
+  setTimeout(() => statusEl.textContent = '', 3000);
+}
+
+async function uploadCoverImage(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const url = await uploadFileToStorage(file);
+    document.getElementById('postCover').value = url;
+  }catch(err){
+    alert('فشل رفع صورة الغلاف: ' + err.message);
+  }
+  e.target.value = '';
+}
+
+/* ---- إدارة المقالات ---- */
+function fillSectionSelect(){
+  const sel = document.getElementById('postSection');
+  sel.innerHTML = `<option value="">بدون قسم</option>` +
+    sectionsCache.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+}
+
+async function loadAdminPosts(){
+  const {data, error} = await supa.from('posts').select('*').order('created_at', {ascending:false});
+  if(error) return;
+  const tbody = document.getElementById('postsTableBody');
+  tbody.innerHTML = data.map(p => {
+    const sec = sectionsCache.find(s => s.id === p.section_id);
+    return `<tr>
+      <td>${esc(p.title)}</td>
+      <td>${sec ? esc(sec.name) : '-'}</td>
+      <td>${fmtDate(p.created_at)}</td>
+      <td class="row-actions">
+        <button class="icon-btn" onclick="editPost('${p.id}')">✏️ تعديل</button>
+        <button class="icon-btn danger" onclick="deletePost('${p.id}')">🗑️ حذف</button>
+      </td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="4">لا توجد مقالات</td></tr>`;
+}
+
+async function editPost(id){
+  const {data: p} = await supa.from('posts').select('*').eq('id', id).single();
+  if(!p) return;
+  document.getElementById('postFormTitle').textContent = '✏️ تعديل المقال';
+  document.getElementById('postId').value = p.id;
+  document.getElementById('postTitle').value = p.title;
+  document.getElementById('postSection').value = p.section_id || '';
+  document.getElementById('postCover').value = p.cover_url || '';
+  document.getElementById('postExcerpt').value = p.excerpt || '';
+  document.getElementById('postContent').innerHTML = p.content || '';
+  window.scrollTo(0,0);
+}
+
+function resetPostForm(){
+  document.getElementById('postFormTitle').textContent = '➕ إضافة مقال جديد';
+  document.getElementById('postId').value = '';
+  document.getElementById('postTitle').value = '';
+  document.getElementById('postSection').value = '';
+  document.getElementById('postCover').value = '';
+  document.getElementById('postExcerpt').value = '';
+  document.getElementById('postContent').innerHTML = '';
+}
+
+async function savePost(){
+  const id = document.getElementById('postId').value;
+  const title = document.getElementById('postTitle').value.trim();
+  const section_id = document.getElementById('postSection').value || null;
+  const cover_url = document.getElementById('postCover').value.trim();
+  const excerpt = document.getElementById('postExcerpt').value.trim();
+  const content = document.getElementById('postContent').innerHTML.trim();
+
+  if(!title || !content){ alert('يرجى إدخال العنوان والمحتوى'); return; }
+
+  const payload = {title, section_id, cover_url, excerpt, content};
+  let error;
+  if(id){
+    ({error} = await supa.from('posts').update(payload).eq('id', id));
+  } else {
+    ({error} = await supa.from('posts').insert(payload));
+  }
+  if(error){ alert('خطأ: ' + error.message); return; }
+  resetPostForm();
+  await loadAdminPosts();
+}
+
+async function deletePost(id){
+  if(!confirm('هل أنت متأكد من حذف هذا المقال؟')) return;
+  await supa.from('posts').delete().eq('id', id);
+  await loadAdminPosts();
+}
+
+/* ---- إدارة الأقسام ---- */
+async function loadAdminSections(){
+  const tbody = document.getElementById('sectionsTableBody');
+  tbody.innerHTML = sectionsCache.map(s => `
+    <tr>
+      <td>${esc(s.name)}</td>
+      <td>${esc(s.slug)}</td>
+      <td class="row-actions">
+        <button class="icon-btn danger" onclick="deleteSection('${s.id}')">🗑️ حذف</button>
+      </td>
+    </tr>
+  `).join('') || `<tr><td colspan="3">لا توجد أقسام</td></tr>`;
+}
+
+async function addSection(){
+  const name = document.getElementById('sectionName').value.trim();
+  let slug = document.getElementById('sectionSlug').value.trim();
+  if(!name){ alert('يرجى إدخال اسم القسم'); return; }
+  if(!slug){
+    slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '') || ('section-' + Date.now());
+  }
+  const {error} = await supa.from('sections').insert({name, slug, sort_order: sectionsCache.length});
+  if(error){ alert('خطأ: ' + error.message); return; }
+  document.getElementById('sectionName').value = '';
+  document.getElementById('sectionSlug').value = '';
+  await loadSections();
+  await loadAdminSections();
+}
+
+async function deleteSection(id){
+  if(!confirm('حذف هذا القسم؟ (لن يتم حذف المقالات المرتبطة به)')) return;
+  await supa.from('sections').delete().eq('id', id);
+  await loadSections();
+  await loadAdminSections();
+}
+
+/* ---- إدارة الرسائل ---- */
+async function loadAdminMessages(){
+  const {data, error} = await supa.from('messages').select('*').order('created_at', {ascending:false});
+  if(error) return;
+  const tbody = document.getElementById('messagesTableBody');
+  tbody.innerHTML = data.map(m => `
+    <tr>
+      <td>${esc(m.sender_name)}</td>
+      <td>${esc(m.email)}</td>
+      <td style="max-width:280px; white-space:normal">${esc(m.message)}</td>
+      <td>${fmtDate(m.created_at)}</td>
+      <td><button class="icon-btn danger" onclick="deleteMessage('${m.id}')">🗑️</button></td>
+    </tr>
+  `).join('') || `<tr><td colspan="5">لا توجد رسائل</td></tr>`;
+}
+async function deleteMessage(id){
+  await supa.from('messages').delete().eq('id', id);
+  await loadAdminMessages();
+}
+
+/* ---- تغيير كلمة المرور ---- */
+async function changeAdminPassword(){
+  const newPass = document.getElementById('newPassword').value.trim();
+  const statusEl = document.getElementById('settingsStatus');
+  if(newPass.length < 4){
+    statusEl.className = 'msg-status err';
+    statusEl.textContent = 'كلمة المرور يجب أن تكون 4 أحرف على الأقل';
+    return;
+  }
+  const {error} = await supa.from('admin_settings').update({password: newPass}).eq('id', 1);
+  if(error){
+    statusEl.className = 'msg-status err';
+    statusEl.textContent = 'خطأ: ' + error.message;
+    return;
+  }
+  statusEl.className = 'msg-status ok';
+  statusEl.textContent = 'تم تحديث كلمة المرور بنجاح';
+  document.getElementById('newPassword').value = '';
+}
+
+/* ================== قائمة الموبايل ================== */
+document.getElementById('burgerBtn').addEventListener('click', () => {
+  document.getElementById('navLinks').classList.toggle('open');
+});
+
+/* ================== بدء التشغيل ================== */
+(async function init(){
+  await loadSections();
+  await loadPosts();
+  router();
+  if(isAdmin()){
+    // يمكن تفعيلها تلقائيًا إذا رغبت، متروكة معطلة حاليًا لأمان أكثر
+  }
+})();
+</script>
+</body>
+</html>
