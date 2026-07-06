@@ -1,109 +1,41 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ahmed Hassan | مدونة تقنية</title>
-<meta name="description" content="مدونة Ahmed Hassan التقنية الشخصية - مقالات وأفكار حول التقنية والبرمجة">
-
-<!--
-=====================================================================
-  إعداد قاعدة البيانات (نفّذ هذا الكود مرة واحدة في Supabase SQL Editor)
-=====================================================================
-
--- جدول الأقسام
-create table sections (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  slug text not null unique,
-  sort_order int default 0,
-  created_at timestamptz default now()
-);
-
--- جدول المقالات
-create table posts (
-  id uuid primary key default gen_random_uuid(),
-  title text not null,
-  content text not null,
-  excerpt text,
-  cover_url text,
-  section_id uuid references sections(id) on delete set null,
-  published boolean default true,
-  created_at timestamptz default now()
-);
-
--- جدول الرسائل
-create table messages (
-  id uuid primary key default gen_random_uuid(),
-  sender_name text,
-  email text,
-  message text,
-  created_at timestamptz default now()
-);
-
--- جدول إعدادات الأدمن (كلمة مرور واحدة فقط)
-create table admin_settings (
-  id int primary key default 1,
-  password text not null
-);
-insert into admin_settings (id, password) values (1, 'ChangeMe123!');
-
--- تفعيل RLS
-alter table sections enable row level security;
-alter table posts enable row level security;
-alter table messages enable row level security;
-alter table admin_settings enable row level security;
-
--- سياسات القراءة العامة
-create policy "public read sections" on sections for select using (true);
-create policy "public read posts" on posts for select using (true);
-
--- سياسات الكتابة العامة (مبسّطة - لأن التحقق من الأدمن يتم في الواجهة)
-create policy "public insert sections" on sections for insert with check (true);
-create policy "public update sections" on sections for update using (true);
-create policy "public delete sections" on sections for delete using (true);
-
-create policy "public insert posts" on posts for insert with check (true);
-create policy "public update posts" on posts for update using (true);
-create policy "public delete posts" on posts for delete using (true);
-
-create policy "public insert messages" on messages for insert with check (true);
-create policy "public read messages" on messages for select using (true);
-create policy "public delete messages" on messages for delete using (true);
-
-create policy "public read admin_settings" on admin_settings for select using (true);
-create policy "public update admin_settings" on admin_settings for update using (true);
-
-=====================================================================
--->
+<title>Ah Stack | Tech Blog & Platform</title>
+<meta name="description" content="Ah Stack - Articles, insights, and roadmaps about technology, DevOps, and programming.">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --bg: #0f1220;
-  --bg-soft: #161a2e;
-  --card: #1b2036;
-  --border: #2a2f4a;
-  --text: #eef0fb;
-  --text-dim: #9aa0c0;
-  --accent: #7c5cff;
-  --accent2: #22d3ee;
-  --accent3: #ff6b9d;
-  --radius: 16px;
-  --shadow: 0 10px 30px rgba(0,0,0,.35);
-  font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+  --bg: #ffffff;
+  --bg-soft: #f8fafc;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-dim: #64748b;
+  --accent: #ef4444; /* Tech Red */
+  --accent-hover: #dc2626;
+  --dark-hold: #1e293b;
+  --radius: 12px;
+  --shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+  --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.05);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 *{box-sizing:border-box; margin:0; padding:0}
 body{
-  background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(124,92,255,.25), transparent 60%),
-    radial-gradient(900px 500px at 110% 10%, rgba(34,211,238,.18), transparent 55%),
-    var(--bg);
+  background-color: var(--bg);
+  background-image: 
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 100px 100px;
+  background-position: center top;
   color:var(--text);
   min-height:100vh;
-  line-height:1.7;
+  line-height:1.6;
 }
 a{color:inherit; text-decoration:none}
 img{max-width:100%; display:block}
@@ -112,337 +44,306 @@ img{max-width:100%; display:block}
 /* ===== Header ===== */
 header{
   position:sticky; top:0; z-index:50;
-  background:rgba(15,18,32,.75);
-  backdrop-filter:blur(14px);
+  background:rgba(255, 255, 255, 0.85);
+  backdrop-filter:blur(12px);
   border-bottom:1px solid var(--border);
 }
 .nav-wrap{
-  max-width:1100px; margin:0 auto; padding:16px 20px;
+  max-width:1100px; margin:0 auto; padding:14px 20px;
   display:flex; align-items:center; justify-content:space-between; gap:16px;
 }
 .brand{
-  display:flex; align-items:center; gap:10px; font-weight:800; font-size:20px;
+  display:flex; align-items:center; gap:8px; font-weight:800; font-size:22px; color: var(--text);
 }
-.brand .dot{
-  width:12px; height:12px; border-radius:50%;
-  background:linear-gradient(135deg, var(--accent), var(--accent2));
-  box-shadow:0 0 16px var(--accent);
+.logo-box {
+  background: var(--text);
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
-nav.links{display:flex; gap:22px; flex-wrap:wrap}
+.logo-box span { color: var(--accent); }
+
+nav.links{display:flex; gap:24px; flex-wrap:wrap; align-items:center}
 nav.links a{
-  color:var(--text-dim); font-weight:600; font-size:15px; position:relative; padding:4px 0;
+  color:var(--text-dim); font-weight:500; font-size:15px; position:relative; padding:4px 0;
   transition:.2s;
 }
-nav.links a:hover, nav.links a.active{color:var(--text)}
+nav.links a:hover, nav.links a.active{color:var(--accent)}
 nav.links a::after{
-  content:''; position:absolute; right:0; bottom:-4px; width:0; height:2px;
-  background:linear-gradient(90deg, var(--accent), var(--accent2));
-  transition:.25s;
+  content:''; position:absolute; left:0; bottom:-4px; width:0; height:2px;
+  background:var(--accent);
+  transition:.2s;
 }
 nav.links a:hover::after, nav.links a.active::after{width:100%}
-.burger{display:none; background:none; border:1px solid var(--border); color:var(--text); border-radius:10px; padding:8px 12px; font-size:18px; cursor:pointer}
+.burger{display:none; background:var(--bg-soft); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:6px 12px; font-size:18px; cursor:pointer}
 
 /* ===== Hero ===== */
 .hero{
-  max-width:1100px; margin:0 auto; padding:70px 20px 40px;
-  display:grid; grid-template-columns:1.2fr .8fr; gap:40px; align-items:center;
+  max-width:1100px; margin:0 auto; padding:60px 20px 30px;
+  display:grid; grid-template-columns:1.3fr .7fr; gap:40px; align-items:center;
 }
 .hero h1{
-  font-size:44px; font-weight:800; line-height:1.25; margin-bottom:16px;
+  font-size:46px; font-weight:800; line-height:1.2; margin-bottom:16px; letter-spacing: -1px;
 }
-.hero h1 span{
-  background:linear-gradient(90deg, var(--accent), var(--accent2));
-  -webkit-background-clip:text; background-clip:text; color:transparent;
-}
-.hero p{color:var(--text-dim); font-size:17px; max-width:520px}
-.hero .badges{display:flex; gap:10px; margin-top:22px; flex-wrap:wrap}
+.hero h1 span{ color: var(--accent); }
+.hero p{color:var(--text-dim); font-size:17px; max-width:540px}
+.hero .badges{display:flex; gap:8px; margin-top:20px; flex-wrap:wrap}
 .badge{
-  padding:7px 14px; border-radius:999px; font-size:13px; font-weight:600;
-  border:1px solid var(--border); background:var(--card); color:var(--text-dim);
+  padding:6px 12px; border-radius:6px; font-size:13px; font-weight:500;
+  border:1px solid var(--border); background:var(--bg-soft); color:var(--text);
 }
 .avatar-card{
   background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-  padding:26px; text-align:center; box-shadow:var(--shadow);
+  padding:24px; text-align:center; box-shadow:var(--shadow);
 }
 .avatar-circle{
-  width:110px; height:110px; border-radius:50%; margin:0 auto 16px;
-  background:linear-gradient(135deg, var(--accent), var(--accent3));
+  width:90px; height:90px; border-radius:50%; margin:0 auto 16px;
+  background: var(--text);
   display:flex; align-items:center; justify-content:center;
-  font-size:42px; font-weight:800; color:#fff;
+  font-size:32px; font-weight:800; color:var(--accent);
+  font-family: 'JetBrains Mono', monospace;
 }
-.avatar-card h3{font-size:20px; margin-bottom:4px}
+.avatar-card h3{font-size:18px; margin-bottom:4px; font-weight: 700;}
 .avatar-card p{color:var(--text-dim); font-size:14px}
 
-/* ================== أنيميشن الدخول ================== */
-@keyframes fadeUp{
-  from{opacity:0; transform:translateY(24px)}
-  to{opacity:1; transform:translateY(0)}
-}
-@keyframes fadeIn{
-  from{opacity:0} to{opacity:1}
-}
-@keyframes popIn{
-  0%{opacity:0; transform:scale(.9) translateY(16px)}
-  100%{opacity:1; transform:scale(1) translateY(0)}
-}
-@keyframes glowPulse{
-  0%,100%{box-shadow:0 0 0 rgba(124,92,255,0)}
-  50%{box-shadow:0 0 24px rgba(124,92,255,.25)}
-}
-@keyframes floatDot{
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-6px)}
-}
+/* ===== Animations ===== */
+@keyframes fadeIn{ from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:translateY(0)} }
+#site-page > div { animation: fadeIn 0.4s ease both; }
 
-.hero{animation:fadeUp .8s cubic-bezier(.22,1,.36,1) both}
-.hero .avatar-card{animation:fadeUp .9s .15s cubic-bezier(.22,1,.36,1) both}
-.dot{animation:floatDot 2.4s ease-in-out infinite}
-
-.post-card, .section-post-row{
-  opacity:0; animation:popIn .6s cubic-bezier(.22,1,.36,1) both;
-}
-.section-hero{animation:fadeUp .7s cubic-bezier(.22,1,.36,1) both}
-.section-banner .crumb{animation:fadeIn .5s ease both}
-
-#site-page > div[style*="display: block"], #site-page > div:not([style*="display: none"]){
-  animation:fadeIn .45s ease both;
-}
-
-.post-view{animation:fadeUp .55s cubic-bezier(.22,1,.36,1) both}
-
-/* زر العودة للأعلى */
+/* Scroll Top Button */
 .scroll-top-btn{
-  position:fixed; bottom:28px; left:28px; width:46px; height:46px; border-radius:50%;
-  background:linear-gradient(135deg, var(--accent), var(--accent2)); color:#fff; border:none;
-  font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;
-  opacity:0; pointer-events:none; transform:translateY(16px); transition:.3s;
-  box-shadow:0 8px 22px rgba(124,92,255,.35); z-index:200;
+  position:fixed; bottom:28px; right:28px; width:44px; height:44px; border-radius:50%;
+  background:var(--text); color:#fff; border:none;
+  font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:.3s; z-index:200; box-shadow: var(--shadow-md);
 }
-.scroll-top-btn.show{opacity:1; pointer-events:auto; transform:translateY(0)}
-.scroll-top-btn:hover{animation:glowPulse 1.6s ease-in-out infinite; transform:translateY(-3px)}
+.scroll-top-btn.show{opacity:1; pointer-events:auto;}
+.scroll-top-btn:hover{background: var(--accent);}
 
-/* شريط البحث */
-.search-wrap{max-width:1100px; margin:0 auto; padding:0 20px 10px}
-.search-box{
-  position:relative; max-width:420px;
-}
+/* ===== Search Bar Integration ===== */
+.search-container{max-width:1100px; margin:20px auto 10px; padding:0 20px}
+.search-box{ position:relative; max-width:100%; }
 .search-box input{
-  width:100%; padding:12px 42px 12px 16px; border-radius:12px; border:1px solid var(--border);
-  background:var(--card); color:var(--text); font-size:14px; transition:.2s;
+  width:100%; padding:14px 16px 14px 46px; border-radius:10px; border:1px solid var(--border);
+  background:var(--card); color:var(--text); font-size:15px; transition:.2s;
+  box-shadow: var(--shadow);
 }
-.search-box input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(124,92,255,.15)}
-.search-box .icon{position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-dim); pointer-events:none}
+.search-box input:focus{border-color:var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);}
+.search-box .icon{position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--text-dim); pointer-events:none; font-size: 16px;}
 
-.reading-time{
-  display:inline-flex; align-items:center; gap:5px; color:var(--text-dim); font-size:13px;
-}
 .section-filter{
-  max-width:1100px; margin:0 auto; padding:0 20px 20px;
-  display:flex; gap:10px; flex-wrap:wrap;
+  max-width:1100px; margin:20px auto; padding:0 20px;
+  display:flex; gap:8px; flex-wrap:wrap;
 }
 .chip{
-  padding:8px 16px; border-radius:999px; border:1px solid var(--border);
-  background:var(--card); color:var(--text-dim); font-weight:600; font-size:14px; cursor:pointer;
+  padding:8px 16px; border-radius:6px; border:1px solid var(--border);
+  background:var(--card); color:var(--text-dim); font-weight:500; font-size:14px; cursor:pointer;
   transition:.2s;
 }
-.chip:hover{border-color:var(--accent)}
+.chip:hover{border-color:var(--text); color: var(--text);}
 .chip.active{
-  background:linear-gradient(135deg, var(--accent), var(--accent2)); color:#fff; border-color:transparent;
+  background:var(--text); color:#fff; border-color:var(--text);
 }
 
-/* ===== صفحة القسم المستقلة (تصميم مختلف عن الرئيسية) ===== */
-.section-banner{
-  max-width:1100px; margin:0 auto; padding:50px 20px 30px;
-}
+/* ===== Section Banner ===== */
+.section-banner{ max-width:1100px; margin:0 auto; padding:40px 20px 20px; }
 .section-banner .crumb{color:var(--text-dim); font-size:14px; margin-bottom:16px; display:flex; align-items:center; gap:6px}
-.section-banner .crumb a{color:var(--accent2); font-weight:600; cursor:pointer}
+.section-banner .crumb a{color:var(--accent); font-weight:600; cursor:pointer}
 .section-hero{
-  background:linear-gradient(120deg, rgba(255,107,157,.16), rgba(124,92,255,.16));
-  border:1px solid var(--border); border-radius:var(--radius); padding:36px 30px;
-  display:flex; align-items:center; gap:22px;
+  background:var(--bg-soft); border:1px solid var(--border); border-radius:var(--radius); padding:30px;
+  display:flex; align-items:center; gap:20px;
 }
 .section-hero .icon{
-  width:64px; height:64px; border-radius:18px; flex-shrink:0;
-  background:linear-gradient(135deg, var(--accent3), var(--accent));
-  display:flex; align-items:center; justify-content:center; font-size:30px;
+  width:54px; height:54px; border-radius:10px; flex-shrink:0;
+  background:var(--text); color: var(--accent);
+  display:flex; align-items:center; justify-content:center; font-size:24px;
 }
-.section-hero h1{font-size:30px; margin-bottom:6px}
+.section-hero h1{font-size:26px; margin-bottom:4px; font-weight: 800;}
 .section-hero p{color:var(--text-dim); font-size:15px}
-.section-list{max-width:1100px; margin:0 auto; padding:30px 20px 20px; display:flex; flex-direction:column; gap:16px}
+
+.section-list{max-width:1100px; margin:0 auto; padding:10px 20px 20px; display:flex; flex-direction:column; gap:14px}
 .section-post-row{
-  display:flex; gap:20px; background:var(--card); border:1px solid var(--border); border-radius:14px;
-  padding:18px; cursor:pointer; transition:.2s; align-items:center;
+  display:flex; gap:20px; background:var(--card); border:1px solid var(--border); border-radius:10px;
+  padding:16px; cursor:pointer; transition:.2s; align-items:center; box-shadow: var(--shadow);
 }
-.section-post-row:hover{border-color:var(--accent3); transform:translateX(-3px)}
+.section-post-row:hover{border-color:var(--accent); transform:translateX(3px)}
 .section-post-row .thumb{
-  width:110px; height:80px; border-radius:10px; overflow:hidden; flex-shrink:0;
-  background:linear-gradient(135deg, rgba(255,107,157,.3), rgba(124,92,255,.25));
-  display:flex; align-items:center; justify-content:center; font-size:26px;
+  width:100px; height:70px; border-radius:6px; overflow:hidden; flex-shrink:0;
+  background:var(--bg-soft); border: 1px solid var(--border);
+  display:flex; align-items:center; justify-content:center; font-size:24px;
 }
 .section-post-row .thumb img{width:100%; height:100%; object-fit:cover}
 .section-post-row .info{flex:1; min-width:0}
-.section-post-row .info .t{font-size:17px; font-weight:700; margin-bottom:4px}
+.section-post-row .info .t{font-size:17px; font-weight:700; margin-bottom:4px; color: var(--text);}
 .section-post-row .info .e{color:var(--text-dim); font-size:14px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
 .section-post-row .info .d{color:var(--text-dim); font-size:12px; margin-top:6px}
 
-/* ===== Posts grid ===== */
+/* ===== Posts Grid ===== */
 main{max-width:1100px; margin:0 auto; padding:20px}
 .posts-grid{
   display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:24px;
-  margin-top:10px;
 }
 .post-card{
   background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
   overflow:hidden; display:flex; flex-direction:column; cursor:pointer;
-  transition:.25s; box-shadow:var(--shadow);
+  transition:.2s; box-shadow:var(--shadow);
 }
-.post-card:hover{transform:translateY(-6px); border-color:var(--accent)}
+.post-card:hover{transform:translateY(-4px); border-color:var(--accent); box-shadow: var(--shadow-md);}
 .post-cover{
-  height:170px; background:linear-gradient(135deg, rgba(124,92,255,.35), rgba(34,211,238,.25));
+  height:160px; background:var(--bg-soft); border-bottom: 1px solid var(--border);
   display:flex; align-items:center; justify-content:center; overflow:hidden;
 }
 .post-cover img{width:100%; height:100%; object-fit:cover}
-.post-cover .fallback{font-size:40px}
+.post-cover .fallback{font-size:36px}
 .post-body{padding:18px; display:flex; flex-direction:column; gap:8px; flex:1}
-.post-tag{font-size:12px; font-weight:700; color:var(--accent2)}
-.post-title{font-size:18px; font-weight:700}
+.post-tag{font-size:12px; font-weight:700; color:var(--accent); text-transform: uppercase; letter-spacing: 0.5px;}
+.post-title{font-size:18px; font-weight:700; color: var(--text);}
 .post-excerpt{color:var(--text-dim); font-size:14px; flex:1}
-.post-meta{font-size:12px; color:var(--text-dim); display:flex; justify-content:space-between; margin-top:6px; border-top:1px solid var(--border); padding-top:10px}
-.empty-state{
-  text-align:center; padding:60px 20px; color:var(--text-dim);
-}
+.post-meta{font-size:12px; color:var(--text-dim); display:flex; justify-content:space-between; margin-top:6px; border-top:1px solid var(--border); padding-top:12px}
+.empty-state{ text-align:center; padding:60px 20px; color:var(--text-dim); font-weight: 500;}
 
-/* ===== Post view ===== */
-.post-view{max-width:760px; margin:0 auto; padding:40px 20px}
+/* ===== Post View ===== */
+.post-view{max-width:740px; margin:0 auto; padding:40px 20px}
 .back-btn{
-  display:inline-flex; align-items:center; gap:6px; color:var(--accent2); font-weight:700;
-  margin-bottom:24px; cursor:pointer;
+  display:inline-flex; align-items:center; gap:6px; color:var(--text); font-weight:600;
+  margin-bottom:24px; cursor:pointer; font-size: 14px;
 }
-.post-view .cover{border-radius:var(--radius); overflow:hidden; margin-bottom:24px; max-height:360px}
-.post-view h1{font-size:32px; margin-bottom:10px}
+.back-btn:hover { color: var(--accent); }
+.post-view .cover{border-radius:var(--radius); overflow:hidden; margin-bottom:24px; max-height:360px; border: 1px solid var(--border);}
+.post-view h1{font-size:36px; margin-bottom:12px; font-weight: 800; letter-spacing: -0.5px;}
 .post-view .meta{color:var(--text-dim); font-size:14px; margin-bottom:26px}
-.post-content{font-size:17px; color:#e5e7f5}
-.post-content img{max-width:100%; border-radius:12px; margin:16px 0; display:block}
-.post-content blockquote{border-right:3px solid var(--accent); padding:8px 16px; color:var(--text-dim); margin:14px 0}
-.post-content ul, .post-content ol{margin:10px 24px}
-.post-content h2, .post-content h3{margin:24px 0 10px; color:var(--text)}
-.post-content p{margin-bottom:14px}
+.post-content{font-size:17px; color: #334155; line-height: 1.75;}
+.post-content img{max-width:100%; border-radius:8px; margin:16px 0; display:block; border: 1px solid var(--border);}
+.post-content blockquote{border-left:4px solid var(--accent); padding:4px 16px; color:var(--text-dim); font-style: italic; margin:18px 0}
+.post-content ul, .post-content ol{margin:10px 24px; padding-left: 10px;}
+.post-content h2, .post-content h3{margin:28px 0 12px; color:var(--text); font-weight: 700;}
+.post-content p{margin-bottom:16px}
 
-/* ===== Contact ===== */
+/* ===== Contact Section ===== */
 .contact-section{
-  max-width:1100px; margin:60px auto; padding:40px 20px;
-  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  max-width:650px; margin:50px auto; padding:40px 30px;
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow: var(--shadow-md);
 }
-.contact-section h2{font-size:26px; margin-bottom:8px}
+.contact-section h2{font-size:28px; margin-bottom:8px; font-weight: 800;}
 .contact-section p.sub{color:var(--text-dim); margin-bottom:24px}
-.contact-form{display:grid; gap:14px; max-width:520px}
+.contact-form{display:grid; gap:14px;}
 .contact-form input, .contact-form textarea{
   background:var(--bg-soft); border:1px solid var(--border); color:var(--text);
-  padding:13px 16px; border-radius:12px; font-family:inherit; font-size:15px; resize:vertical;
+  padding:13px 16px; border-radius:8px; font-family:inherit; font-size:15px; resize:vertical;
 }
 .contact-form input:focus, .contact-form textarea:focus{outline:none; border-color:var(--accent)}
 .btn{
-  background:linear-gradient(135deg, var(--accent), var(--accent2)); color:#fff; border:none;
-  padding:13px 22px; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer;
-  transition:.2s; width:fit-content;
+  background:var(--text); color:#fff; border:none;
+  padding:13px 24px; border-radius:8px; font-weight:600; font-size:15px; cursor:pointer;
+  transition:.15s; width:fit-content;
 }
-.btn:hover{filter:brightness(1.1); transform:translateY(-1px)}
+.btn:hover{background: var(--accent); transform:translateY(-1px)}
 .btn.secondary{background:var(--bg-soft); border:1px solid var(--border); color:var(--text)}
-.btn.danger{background:linear-gradient(135deg,#ff5f6d,#ff6b9d)}
-.msg-status{font-size:14px; padding:10px 14px; border-radius:10px; display:none}
-.msg-status.ok{background:rgba(34,197,94,.15); color:#4ade80; display:block}
-.msg-status.err{background:rgba(239,68,68,.15); color:#f87171; display:block}
+.btn.secondary:hover {background: #f1f5f9;}
+.btn.danger{background:var(--accent)}
+.btn.danger:hover{background: var(--accent-hover);}
+.msg-status{font-size:14px; padding:10px 14px; border-radius:8px; display:none}
+.msg-status.ok{background:rgba(34,197,94,.1); color:#16a34a; display:block}
+.msg-status.err{background:rgba(239,68,68,.1); color:#dc2626; display:block}
 
-footer{text-align:center; padding:40px 20px; color:var(--text-dim); font-size:14px; border-top:1px solid var(--border); margin-top:40px}
+footer{text-align:center; padding:40px 20px; color:var(--text-dim); font-size:14px; border-top:1px solid var(--border); margin-top:60px}
 
-/* ===== Modal (admin login) ===== */
+/* ===== Modal (Admin Login) ===== */
 .modal-backdrop{
-  position:fixed; inset:0; background:rgba(5,6,15,.75); backdrop-filter:blur(4px);
+  position:fixed; inset:0; background:rgba(15, 23, 42, 0.3); backdrop-filter:blur(4px);
   display:none; align-items:center; justify-content:center; z-index:200; padding:20px;
 }
 .modal-backdrop.show{display:flex}
 .modal{
   background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-  padding:32px; max-width:400px; width:100%; box-shadow:var(--shadow);
+  padding:32px; max-width:400px; width:100%; box-shadow:var(--shadow-md);
 }
-.modal h3{font-size:20px; margin-bottom:6px}
+.modal h3{font-size:20px; margin-bottom:6px; font-weight: 700;}
 .modal p{color:var(--text-dim); font-size:14px; margin-bottom:20px}
 .modal input{
   width:100%; background:var(--bg-soft); border:1px solid var(--border); color:var(--text);
-  padding:13px 16px; border-radius:12px; margin-bottom:14px; font-size:15px;
+  padding:12px 14px; border-radius:8px; margin-bottom:14px; font-size:15px;
 }
 .modal .row{display:flex; gap:10px}
 
 /* ===== Admin Dashboard ===== */
-#admin-page{display:none}
-.admin-shell{max-width:1200px; margin:0 auto; padding:20px}
+#admin-page{display:none; background: var(--bg-soft); min-height: 100vh;}
+.admin-shell{max-width:1100px; margin:0 auto; padding:40px 20px}
 .admin-header{
   display:flex; justify-content:space-between; align-items:center; margin-bottom:26px;
   padding-bottom:18px; border-bottom:1px solid var(--border);
 }
-.admin-header h1{font-size:24px}
-.admin-tabs{display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap}
+.admin-header h1{font-size:26px; font-weight: 800;}
+.admin-tabs{display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap}
 .admin-tab{
-  padding:10px 18px; border-radius:12px; border:1px solid var(--border); background:var(--card);
-  color:var(--text-dim); font-weight:700; cursor:pointer;
+  padding:10px 18px; border-radius:8px; border:1px solid var(--border); background:var(--card);
+  color:var(--text-dim); font-weight:600; cursor:pointer; font-size: 14px;
 }
-.admin-tab.active{background:linear-gradient(135deg, var(--accent), var(--accent2)); color:#fff; border-color:transparent}
+.admin-tab.active{background:var(--text); color:#fff; border-color:var(--text)}
 .admin-panel{display:none}
 .admin-panel.active{display:block}
 .admin-card{
-  background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:22px; margin-bottom:18px;
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; margin-bottom:20px;
+  box-shadow: var(--shadow);
 }
-.form-grid{display:grid; gap:12px; margin-bottom:16px}
+.form-grid{display:grid; gap:14px; margin-bottom:16px}
 .form-grid input, .form-grid textarea, .form-grid select{
   background:var(--bg-soft); border:1px solid var(--border); color:var(--text);
-  padding:12px 14px; border-radius:10px; font-family:inherit; font-size:14px; width:100%;
+  padding:12px 14px; border-radius:8px; font-family:inherit; font-size:14px; width:100%;
 }
-.form-grid textarea{min-height:200px; resize:vertical; font-family:'JetBrains Mono', monospace}
+.form-grid textarea{min-height:180px; resize:vertical; font-family:'JetBrains Mono', monospace}
 
-/* ===== محرر المقال الغني (Rich Editor) ===== */
-.editor-wrap{border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--bg-soft)}
+/* Rich Editor */
+.editor-wrap{border:1px solid var(--border); border-radius:8px; overflow:hidden; background:var(--card)}
 .editor-toolbar{
-  display:flex; gap:6px; flex-wrap:wrap; padding:8px; background:var(--card);
+  display:flex; gap:6px; flex-wrap:wrap; padding:8px; background:var(--bg-soft);
   border-bottom:1px solid var(--border);
 }
 .editor-toolbar button{
-  background:var(--bg-soft); border:1px solid var(--border); color:var(--text);
-  width:34px; height:34px; border-radius:8px; cursor:pointer; font-size:15px;
+  background:var(--card); border:1px solid var(--border); color:var(--text);
+  width:34px; height:34px; border-radius:6px; cursor:pointer; font-size:14px;
   display:flex; align-items:center; justify-content:center; transition:.15s;
 }
-.editor-toolbar button:hover{border-color:var(--accent); color:var(--accent2)}
+.editor-toolbar button:hover{border-color:var(--text); background: var(--bg-soft);}
 .editor-toolbar .sep{width:1px; background:var(--border); margin:2px 4px}
 .editor-toolbar input[type="file"]{display:none}
 .editor-area{
   min-height:260px; max-height:520px; overflow-y:auto; padding:16px; font-size:15px;
-  color:var(--text); line-height:1.8; outline:none;
+  color:var(--text); line-height:1.7; outline:none; background: #fff;
 }
-.editor-area img{max-width:100%; border-radius:10px; margin:10px 0; display:block}
+.editor-area img{max-width:100%; border-radius:6px; margin:10px 0; display:block}
 .editor-area h2, .editor-area h3{margin:14px 0 8px}
 .editor-area blockquote{
-  border-right:3px solid var(--accent); padding:6px 14px; color:var(--text-dim); margin:10px 0;
+  border-left:3px solid var(--accent); padding:6px 14px; color:var(--text-dim); margin:10px 0; font-style: italic;
 }
 .editor-area p{margin-bottom:10px}
 .editor-area:empty::before{content:attr(data-placeholder); color:var(--text-dim)}
-.upload-status{font-size:12px; color:var(--accent2); padding:4px 8px}
+.upload-status{font-size:12px; color:var(--accent); padding:4px 8px}
+
 table{width:100%; border-collapse:collapse}
-th, td{padding:12px; text-align:right; border-bottom:1px solid var(--border); font-size:14px}
-th{color:var(--text-dim); font-weight:700}
-.row-actions{display:flex; gap:8px}
+th, td{padding:12px 16px; text-align:left; border-bottom:1px solid var(--border); font-size:14px}
+th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
+.row-actions{display:flex; gap:6px}
 .icon-btn{
   background:var(--bg-soft); border:1px solid var(--border); color:var(--text);
-  padding:6px 12px; border-radius:8px; cursor:pointer; font-size:13px;
+  padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; font-weight: 500;
 }
-.icon-btn.danger{color:#f87171; border-color:rgba(248,113,113,.3)}
-.icon-btn:hover{border-color:var(--accent)}
+.icon-btn.danger{color:var(--accent); border-color:rgba(239,68,68,0.2)}
+.icon-btn.danger:hover { background: rgba(239,68,68,0.05); }
+.icon-btn:hover{border-color:var(--text); background: #f1f5f9;}
 
 @media (max-width:800px){
-  .hero{grid-template-columns:1fr}
-  .hero h1{font-size:32px}
+  .hero{grid-template-columns:1fr; padding-top: 30px;}
+  .hero h1{font-size:34px}
   nav.links{
-    position:fixed; top:64px; left:0; right:0; background:var(--bg-soft);
-    flex-direction:column; padding:20px; border-bottom:1px solid var(--border);
-    transform:translateY(-120%); transition:.25s; gap:16px;
+    position:fixed; top:60px; left:0; right:0; background:var(--card);
+    flex-direction:column; padding:24px; border-bottom:1px solid var(--border);
+    transform:translateY(-120%); transition:.25s; gap:16px; box-shadow: var(--shadow-md);
+    align-items: flex-start;
   }
   nav.links.open{transform:translateY(0)}
   .burger{display:block}
@@ -451,218 +352,214 @@ th{color:var(--text-dim); font-weight:700}
 </head>
 <body>
 
-<!-- ===================== الموقع العام ===================== -->
 <div id="site-page">
   <header>
     <div class="nav-wrap">
-      <a href="#/" class="brand"><span class="dot"></span> Ahmed Hassan</a>
+      <a href="#/" class="brand"><div class="logo-box">Ah<span>_Stack</span></div></a>
       <button class="burger" id="burgerBtn">☰</button>
       <nav class="links" id="navLinks">
-        <a href="#/" class="nav-link active" data-view="home">الرئيسية</a>
+        <a href="#/" class="nav-link active" data-view="home">Home</a>
         <span id="dynamicNavLinks"></span>
-        <a href="#/contact" class="nav-link" data-view="contact">تواصل معي</a>
+        <a href="#/contact" class="nav-link" data-view="contact">Contact</a>
       </nav>
     </div>
   </header>
 
-  <!-- الصفحة الرئيسية -->
   <div id="view-home">
     <section class="hero">
       <div>
-        <h1>مرحبًا، أنا <span>Ahmed Hassan</span><br>مطوّر أكتب عن التقنية</h1>
-        <p>مدونة شخصية أشارك فيها أفكاري وتجاربي في عالم البرمجة والتقنية، بأسلوب بسيط ومباشر.</p>
+        <h1>Welcome to <span>Ah Stack</span><br>Insights & Tech Roadmaps</h1>
+        <p>A technical platform dedicated to sharing architectural concepts, code practicalities, and roadmap guidelines for software engineer pioneers.</p>
         <div class="badges">
-          <span class="badge">💻 برمجة</span>
-          <span class="badge">⚡ تقنية</span>
-          <span class="badge">📝 مقالات دورية</span>
+          <span class="badge">🚀 DevOps</span>
+          <span class="badge">💻 Software Development</span>
+          <span class="badge">⚡ Tech Architecture</span>
         </div>
       </div>
       <div class="avatar-card">
-        <div class="avatar-circle">AH</div>
-        <h3>Ahmed Hassan</h3>
-        <p>مطوّر ومدوّن تقني</p>
+        <div class="avatar-circle">Ah</div>
+        <h3>Ah Stack Engine</h3>
+        <p>Curated by Ahmed Hassan</p>
       </div>
     </section>
 
+    <div class="search-container">
+      <div class="search-box">
+        <span class="icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search articles by titles, keywords, or tags..." oninput="handleSearch(this.value)">
+      </div>
+    </div>
+
     <div class="section-filter" id="sectionFilter">
-      <span class="chip active" data-section="all">الكل</span>
+      <span class="chip active" data-section="all">All Ecosystems</span>
     </div>
 
     <main>
       <div class="posts-grid" id="postsGrid">
-        <div class="empty-state">جاري تحميل المقالات...</div>
+        <div class="empty-state">Loading technical feed...</div>
       </div>
     </main>
   </div>
 
-  <!-- صفحة القسم المستقلة -->
   <div id="view-section" style="display:none">
     <div class="section-banner">
-      <div class="crumb"><a onclick="location.hash='#/'">الرئيسية</a> <span>←</span> <span id="secCrumbName"></span></div>
+      <div class="crumb"><a onclick="location.hash='#/'">Home</a> <span>→</span> <span id="secCrumbName"></span></div>
       <div class="section-hero">
         <div class="icon">🗂️</div>
         <div>
-          <h1 id="secTitle">القسم</h1>
-          <p id="secDesc">كل المقالات المنشورة في هذا القسم</p>
+          <h1 id="secTitle">Ecosystem</h1>
+          <p id="secDesc">Browse all technical documentations in this ecosystem.</p>
         </div>
       </div>
     </div>
     <div class="section-list" id="sectionPostsList"></div>
   </div>
 
-  <!-- عرض المقال -->
   <div id="view-post" style="display:none">
     <div class="post-view">
-      <span class="back-btn" onclick="location.hash='#/'">→ العودة إلى المقالات</span>
+      <span class="back-btn" onclick="location.hash='#/'">← Back to Articles</span>
       <div id="postDetail"></div>
     </div>
   </div>
 
-  <!-- صفحة التواصل -->
   <div id="view-contact" style="display:none">
-    <div class="contact-section" style="margin-top:60px">
-      <h2>تواصل معي</h2>
-      <p class="sub">لديك سؤال أو اقتراح؟ راسلني من هنا.</p>
+    <div class="contact-section">
+      <h2>Get in Touch</h2>
+      <p class="sub">Have an architectural inquiry or a technical proposal? Drop a line below.</p>
       <form class="contact-form" id="contactForm">
-        <input type="text" id="senderName" placeholder="اسمك" required>
-        <input type="email" id="senderEmail" placeholder="بريدك الإلكتروني" required>
-        <textarea id="senderMessage" placeholder="رسالتك..." rows="5" required></textarea>
-        <button type="submit" class="btn">إرسال الرسالة</button>
+        <input type="text" id="senderName" placeholder="Your Name" required>
+        <input type="email" id="senderEmail" placeholder="Your Email Address" required>
+        <textarea id="senderMessage" placeholder="State your message or inquiry here..." rows="5" required></textarea>
+        <button type="submit" class="btn">Send Message</button>
         <div class="msg-status" id="msgStatus"></div>
       </form>
     </div>
   </div>
 
   <footer>
-    © 2026 Ahmed Hassan — جميع الحقوق محفوظة
+    © 2026 Ah Stack — Built for scaling builders. All rights reserved.
   </footer>
 </div>
 
-<!-- ===================== نافذة تسجيل دخول الأدمن ===================== -->
 <div class="modal-backdrop" id="adminModal">
   <div class="modal">
-    <h3>🔒 دخول لوحة التحكم</h3>
-    <p>أدخل كلمة المرور للمتابعة</p>
-    <input type="password" id="adminPassInput" placeholder="كلمة المرور">
+    <h3>🔒 Gateway Access</h3>
+    <p>Provide control credentials to access backend dashboard.</p>
+    <input type="password" id="adminPassInput" placeholder="Security Token Key">
     <div class="msg-status" id="adminLoginError" style="margin-bottom:12px"></div>
     <div class="row">
-      <button class="btn" onclick="tryAdminLogin()">دخول</button>
-      <button class="btn secondary" onclick="closeAdminModal()">إلغاء</button>
+      <button class="btn" onclick="tryAdminLogin()">Authorize</button>
+      <button class="btn secondary" onclick="closeAdminModal()">Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- ===================== لوحة تحكم الأدمن ===================== -->
 <div id="admin-page">
   <div class="admin-shell">
     <div class="admin-header">
-      <h1>⚙️ لوحة التحكم</h1>
+      <h1>⚙️ Control Panel Dashboard</h1>
       <div class="row-actions">
-        <button class="icon-btn" onclick="goToSite()">↩ عرض الموقع</button>
-        <button class="icon-btn danger" onclick="adminLogout()">تسجيل الخروج</button>
+        <button class="icon-btn" onclick="goToSite()">↩ Terminate to Site</button>
+        <button class="icon-btn danger" onclick="adminLogout()">Revoke Session</button>
       </div>
     </div>
 
     <div class="admin-tabs">
-      <div class="admin-tab active" data-tab="posts" onclick="switchAdminTab('posts')">📝 المقالات</div>
-      <div class="admin-tab" data-tab="sections" onclick="switchAdminTab('sections')">🗂️ الأقسام</div>
-      <div class="admin-tab" data-tab="messages" onclick="switchAdminTab('messages')">✉️ الرسائل</div>
-      <div class="admin-tab" data-tab="settings" onclick="switchAdminTab('settings')">🔑 الإعدادات</div>
+      <div class="admin-tab active" data-tab="posts" onclick="switchAdminTab('posts')">📝 Articles</div>
+      <div class="admin-tab" data-tab="sections" onclick="switchAdminTab('sections')">🗂️ Ecosystems</div>
+      <div class="admin-tab" data-tab="messages" onclick="switchAdminTab('messages')">✉️ Inbound Transmissions</div>
+      <div class="admin-tab" data-tab="settings" onclick="switchAdminTab('settings')">🔑 Configuration Token</div>
     </div>
 
-    <!-- تبويب المقالات -->
     <div class="admin-panel active" id="panel-posts">
       <div class="admin-card">
-        <h3 style="margin-bottom:14px" id="postFormTitle">➕ إضافة مقال جديد</h3>
+        <h3 style="margin-bottom:14px" id="postFormTitle">➕ Stage New Post</h3>
         <input type="hidden" id="postId">
         <div class="form-grid">
-          <input type="text" id="postTitle" placeholder="عنوان المقال">
+          <input type="text" id="postTitle" placeholder="Article Title Description">
           <select id="postSection"></select>
           <div style="display:flex; gap:10px; align-items:center">
-            <input type="text" id="postCover" placeholder="رابط صورة الغلاف (اختياري)" style="flex:1">
-            <button type="button" class="icon-btn" onclick="document.getElementById('coverUploadInput').click()">📤 رفع صورة غلاف</button>
+            <input type="text" id="postCover" placeholder="Cover Image URL asset (Optional)" style="flex:1">
+            <button type="button" class="icon-btn" onclick="document.getElementById('coverUploadInput').click()">📤 Upload Cover</button>
             <input type="file" id="coverUploadInput" accept="image/*" style="display:none" onchange="uploadCoverImage(event)">
           </div>
-          <textarea id="postExcerpt" placeholder="مقتطف قصير يظهر في القائمة" style="min-height:80px"></textarea>
+          <textarea id="postExcerpt" placeholder="Short description metadata snippet for listings" style="min-height:80px"></textarea>
 
-          <label style="font-size:13px; color:var(--text-dim); margin-top:4px">محتوى المقال</label>
+          <label style="font-size:13px; color:var(--text-dim); margin-top:4px; font-weight:600">Rich Post Engine Content Body</label>
           <div class="editor-wrap">
             <div class="editor-toolbar">
-              <button type="button" title="عريض" onclick="fmt('bold')"><b>B</b></button>
-              <button type="button" title="مائل" onclick="fmt('italic')"><i>I</i></button>
-              <button type="button" title="خط تحت" onclick="fmt('underline')"><u>U</u></button>
+              <button type="button" title="Bold" onclick="fmt('bold')"><b>B</b></button>
+              <button type="button" title="Italic" onclick="fmt('italic')"><i>I</i></button>
+              <button type="button" title="Underline" onclick="fmt('underline')"><u>U</u></button>
               <div class="sep"></div>
-              <button type="button" title="عنوان كبير" onclick="fmt('formatBlock','H2')">H2</button>
-              <button type="button" title="عنوان صغير" onclick="fmt('formatBlock','H3')">H3</button>
-              <button type="button" title="اقتباس" onclick="fmt('formatBlock','BLOCKQUOTE')">❝</button>
-              <button type="button" title="فقرة عادية" onclick="fmt('formatBlock','P')">¶</button>
+              <button type="button" title="Header 2" onclick="fmt('formatBlock','H2')">H2</button>
+              <button type="button" title="Header 3" onclick="fmt('formatBlock','H3')">H3</button>
+              <button type="button" title="Quote Block" onclick="fmt('formatBlock','BLOCKQUOTE')">❝</button>
+              <button type="button" title="Paragraph" onclick="fmt('formatBlock','P')">¶</button>
               <div class="sep"></div>
-              <button type="button" title="قائمة نقطية" onclick="fmt('insertUnorderedList')">•≡</button>
-              <button type="button" title="قائمة مرقمة" onclick="fmt('insertOrderedList')">1≡</button>
+              <button type="button" title="Unordered List" onclick="fmt('insertUnorderedList')">•≡</button>
+              <button type="button" title="Ordered List" onclick="fmt('insertOrderedList')">1≡</button>
               <div class="sep"></div>
-              <button type="button" title="رابط" onclick="insertLink()">🔗</button>
-              <button type="button" title="إدراج صورة برابط" onclick="insertImageByUrl()">🖼️</button>
-              <button type="button" title="رفع صورة من جهازك" onclick="document.getElementById('contentImgInput').click()">📤</button>
+              <button type="button" title="Link Anchor" onclick="insertLink()">🔗</button>
+              <button type="button" title="Image URL" onclick="insertImageByUrl()">🖼️</button>
+              <button type="button" title="Upload Local Image Asset" onclick="document.getElementById('contentImgInput').click()">📤</button>
               <input type="file" id="contentImgInput" accept="image/*" onchange="uploadContentImage(event)">
               <div class="sep"></div>
-              <button type="button" title="تراجع" onclick="fmt('undo')">↩</button>
+              <button type="button" title="Undo" onclick="fmt('undo')">↩</button>
               <span class="upload-status" id="uploadStatus"></span>
             </div>
-            <div class="editor-area" id="postContent" contenteditable="true" data-placeholder="اكتب محتوى المقال هنا... يمكنك إدراج صور مباشرة داخل النص"></div>
+            <div class="editor-area" id="postContent" contenteditable="true" data-placeholder="Inject comprehensive engineering content body markup right here..."></div>
           </div>
         </div>
         <div class="row-actions" style="margin-top:14px">
-          <button class="btn" onclick="savePost()">💾 حفظ المقال</button>
-          <button class="btn secondary" onclick="resetPostForm()">مسح النموذج</button>
+          <button class="btn" onclick="savePost()">💾 Deploy Article</button>
+          <button class="btn secondary" onclick="resetPostForm()">Wipe Template Form</button>
         </div>
       </div>
       <div class="admin-card">
-        <h3 style="margin-bottom:14px">قائمة المقالات</h3>
+        <h3 style="margin-bottom:14px">Staged Manuscripts</h3>
         <table>
-          <thead><tr><th>العنوان</th><th>القسم</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
+          <thead><tr><th>Title Headline</th><th>Ecosystem Segment</th><th>Deployment Date</th><th>Actions</th></tr></thead>
           <tbody id="postsTableBody"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- تبويب الأقسام -->
     <div class="admin-panel" id="panel-sections">
       <div class="admin-card">
-        <h3 style="margin-bottom:14px">➕ إضافة قسم جديد</h3>
+        <h3 style="margin-bottom:14px">➕ Initialize New Ecosystem Segment</h3>
         <div class="form-grid" style="grid-template-columns:1fr 1fr; display:grid">
-          <input type="text" id="sectionName" placeholder="اسم القسم (مثال: الذكاء الاصطناعي)">
-          <input type="text" id="sectionSlug" placeholder="slug بالإنجليزية (مثال: ai)">
+          <input type="text" id="sectionName" placeholder="Ecosystem Cluster Name (e.g., DevOps Pipeline)">
+          <input type="text" id="sectionSlug" placeholder="Slug identifier endpoint url (e.g., devops)">
         </div>
-        <button class="btn" onclick="addSection()">إضافة القسم</button>
+        <button class="btn" onclick="addSection()">Provision Ecosystem</button>
       </div>
       <div class="admin-card">
-        <h3 style="margin-bottom:14px">الأقسام الحالية</h3>
+        <h3 style="margin-bottom:14px">Active Ecosystem Segments</h3>
         <table>
-          <thead><tr><th>الاسم</th><th>Slug</th><th>إجراءات</th></tr></thead>
+          <thead><tr><th>Ecosystem Name</th><th>URL Slug Routing</th><th>Actions</th></tr></thead>
           <tbody id="sectionsTableBody"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- تبويب الرسائل -->
     <div class="admin-panel" id="panel-messages">
       <div class="admin-card">
-        <h3 style="margin-bottom:14px">الرسائل الواردة</h3>
+        <h3 style="margin-bottom:14px">Inbound Encrypted Transmissions</h3>
         <table>
-          <thead><tr><th>الاسم</th><th>البريد</th><th>الرسالة</th><th>التاريخ</th><th></th></tr></thead>
+          <thead><tr><th>Sender identity</th><th>Network Email</th><th>Message payload content</th><th>Timestamp</th><th></th></tr></thead>
           <tbody id="messagesTableBody"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- تبويب الإعدادات -->
     <div class="admin-panel" id="panel-settings">
       <div class="admin-card" style="max-width:420px">
-        <h3 style="margin-bottom:14px">تغيير كلمة المرور</h3>
+        <h3 style="margin-bottom:14px">Update Security Credential Key</h3>
         <div class="form-grid">
-          <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
+          <input type="password" id="newPassword" placeholder="Fresh Control Token Passphrase">
         </div>
-        <button class="btn" onclick="changeAdminPassword()">تحديث كلمة المرور</button>
+        <button class="btn" onclick="changeAdminPassword()">Commit Token Update</button>
         <div class="msg-status" id="settingsStatus" style="margin-top:12px"></div>
       </div>
     </div>
@@ -670,7 +567,7 @@ th{color:var(--text-dim); font-weight:700}
 </div>
 
 <script>
-/* ================== إعداد Supabase ================== */
+/* ================== SUPABASE INITIALIZATION ================== */
 const SUPABASE_URL = "https://wgcfajrwfmunwoqmneww.supabase.co";
 const SUPABASE_KEY = "sb_publishable_suydYW04acUwgjkSsBwT3w_-7z650gm";
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -678,17 +575,18 @@ const supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let ADMIN_TRIGGER = "123456789";
 let sectionsCache = [];
 let postsCache = [];
+let currentSearchQuery = "";
 
-/* ================== أدوات مساعدة ================== */
+/* ================== UTILITIES ================== */
 function esc(str){
   if(!str) return "";
   return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 function fmtDate(d){
-  return new Date(d).toLocaleDateString('ar-EG', {year:'numeric', month:'long', day:'numeric'});
+  return new Date(d).toLocaleDateString('en-US', {year:'numeric', month:'short', day:'numeric'});
 }
 
-/* ================== تحميل البيانات العامة ================== */
+/* ================== DATA HYDRATION ================== */
 async function loadSections(){
   const {data, error} = await supa.from('sections').select('*').order('sort_order', {ascending:true});
   if(error){ console.error(error); return; }
@@ -707,7 +605,7 @@ async function loadPosts(){
 
 function renderSectionFilter(){
   const el = document.getElementById('sectionFilter');
-  el.innerHTML = `<span class="chip active" data-section="all" onclick="filterPosts('all', this)">الكل</span>` +
+  el.innerHTML = `<span class="chip active" data-section="all" onclick="filterPosts('all', this)">All Ecosystems</span>` +
     sectionsCache.map(s => `<span class="chip" data-section="${s.id}" onclick="location.hash='#/section/${s.slug}'">${esc(s.name)}</span>`).join('');
 }
 
@@ -724,14 +622,30 @@ function filterPosts(sectionId, chipEl){
   renderPostsGrid(sectionId);
 }
 
+/* Search query handler */
+function handleSearch(query) {
+  currentSearchQuery = query.toLowerCase().trim();
+  renderPostsGrid('all');
+}
+
 function renderPostsGrid(sectionId){
   const grid = document.getElementById('postsGrid');
   let list = postsCache;
+  
   if(sectionId && sectionId !== 'all'){
     list = postsCache.filter(p => p.section_id === sectionId);
   }
+  
+  // Real-time keyword filter across Title and Excerpt
+  if(currentSearchQuery) {
+    list = list.filter(p => 
+      p.title.toLowerCase().includes(currentSearchQuery) || 
+      (p.excerpt && p.excerpt.toLowerCase().includes(currentSearchQuery))
+    );
+  }
+  
   if(list.length === 0){
-    grid.innerHTML = `<div class="empty-state">لا توجد مقالات بعد 🙂</div>`;
+    grid.innerHTML = `<div class="empty-state">No matching structural articles found.</div>`;
     return;
   }
   grid.innerHTML = list.map(p => {
@@ -742,10 +656,10 @@ function renderPostsGrid(sectionId){
         ${p.cover_url ? `<img src="${esc(p.cover_url)}" alt="">` : `<span class="fallback">📝</span>`}
       </div>
       <div class="post-body">
-        <span class="post-tag">${sec ? esc(sec.name) : 'عام'}</span>
+        <span class="post-tag">${sec ? esc(sec.name) : 'General'}</span>
         <div class="post-title">${esc(p.title)}</div>
         <div class="post-excerpt">${esc(p.excerpt || '')}</div>
-        <div class="post-meta"><span>${fmtDate(p.created_at)}</span><span>اقرأ →</span></div>
+        <div class="post-meta"><span>${fmtDate(p.created_at)}</span><span style="color:var(--accent); font-weight:600">Read Vector →</span></div>
       </div>
     </div>`;
   }).join('');
@@ -755,23 +669,23 @@ function findSectionBySlug(slug){
   return sectionsCache.find(s => s.slug === slug);
 }
 
-/* ================== عرض مقال منفرد ================== */
+/* ================== SINGLE ARTICLE RENDERING ================== */
 async function showPost(id){
   const {data: p, error} = await supa.from('posts').select('*').eq('id', id).single();
   if(error || !p){
-    document.getElementById('postDetail').innerHTML = `<div class="empty-state">المقال غير موجود</div>`;
+    document.getElementById('postDetail').innerHTML = `<div class="empty-state">The specified deployment entry missing.</div>`;
     return;
   }
   const sec = sectionsCache.find(s => s.id === p.section_id);
   document.getElementById('postDetail').innerHTML = `
     ${p.cover_url ? `<div class="cover"><img src="${esc(p.cover_url)}"></div>` : ''}
     <h1>${esc(p.title)}</h1>
-    <div class="meta">${sec ? esc(sec.name) : 'عام'} · ${fmtDate(p.created_at)}</div>
+    <div class="meta"><span style="color:var(--accent); font-weight:600">${sec ? esc(sec.name) : 'General'}</span> · ${fmtDate(p.created_at)}</div>
     <div class="post-content">${p.content}</div>
   `;
 }
 
-/* ================== التوجيه (Routing) ================== */
+/* ================== ROUTING ROUTINES ================== */
 function router(){
   const hash = location.hash || '#/';
   document.getElementById('view-home').style.display = 'none';
@@ -804,25 +718,25 @@ function router(){
 }
 window.addEventListener('hashchange', router);
 
-/* ================== صفحة القسم المستقلة ================== */
-const SECTION_ICONS = ['🗂️','💡','⚙️','🚀','📡','🧠','🔧','📚'];
+/* ================== SYSTEM SEGMENTS PAGE ================== */
+const SECTION_ICONS = ['💡','⚙️','🚀','📡','🧠','🔧','⚡','📦'];
 function renderSectionPage(sec, slug){
   const listEl = document.getElementById('sectionPostsList');
-  document.getElementById('secTitle').textContent = sec ? sec.name : 'قسم غير معروف';
+  document.getElementById('secTitle').textContent = sec ? sec.name : 'Unknown Segment';
   document.getElementById('secCrumbName').textContent = sec ? sec.name : slug;
   document.getElementById('secDesc').textContent = sec
-    ? `كل المقالات المنشورة في قسم ${sec.name}`
-    : 'لم يتم العثور على هذا القسم';
+    ? `All operational logs catalogued under ${sec.name}`
+    : 'System routing reference error.';
   const iconIdx = sec ? (sectionsCache.findIndex(s => s.id === sec.id) % SECTION_ICONS.length) : 0;
   document.querySelector('.section-hero .icon').textContent = SECTION_ICONS[iconIdx] || '🗂️';
 
   if(!sec){
-    listEl.innerHTML = `<div class="empty-state">القسم غير موجود</div>`;
+    listEl.innerHTML = `<div class="empty-state">Segment cluster target not mapped.</div>`;
     return;
   }
   const list = postsCache.filter(p => p.section_id === sec.id);
   if(list.length === 0){
-    listEl.innerHTML = `<div class="empty-state">لا توجد مقالات في هذا القسم بعد 🙂</div>`;
+    listEl.innerHTML = `<div class="empty-state">No analytical logs compiled here yet.</div>`;
     return;
   }
   listEl.innerHTML = list.map(p => `
@@ -837,14 +751,14 @@ function renderSectionPage(sec, slug){
   `).join('');
 }
 
-/* ================== نموذج التواصل + المصيدة السرية للأدمن ================== */
+/* ================== FORMS & SNEAK CONTROL INTERCEPT ================== */
 document.getElementById('contactForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const name = document.getElementById('senderName').value.trim();
   const email = document.getElementById('senderEmail').value.trim();
   const message = document.getElementById('senderMessage').value.trim();
 
-  // المصيدة السرية لدخول الأدمن
+  // Hidden admin control intercept gateway
   if(name === ADMIN_TRIGGER){
     document.getElementById('senderName').value = '';
     document.getElementById('contactForm').reset();
@@ -856,15 +770,15 @@ document.getElementById('contactForm').addEventListener('submit', async (e) => {
   const {error} = await supa.from('messages').insert({sender_name: name, email, message});
   if(error){
     statusEl.className = 'msg-status err';
-    statusEl.textContent = 'حدث خطأ أثناء الإرسال، حاول مرة أخرى.';
+    statusEl.textContent = 'Data package drops error. Retrying recommended.';
   } else {
     statusEl.className = 'msg-status ok';
-    statusEl.textContent = 'تم إرسال رسالتك بنجاح! سأرد عليك قريبًا 🙏';
+    statusEl.textContent = 'Transmission deployed successfully. Stand by for feedback response!';
     document.getElementById('contactForm').reset();
   }
 });
 
-/* ================== نظام دخول الأدمن ================== */
+/* ================== AUTHORIZATION FLOW SYSTEM ================== */
 function openAdminModal(){
   document.getElementById('adminModal').classList.add('show');
   document.getElementById('adminPassInput').value = '';
@@ -881,7 +795,7 @@ async function tryAdminLogin(){
   const {data, error} = await supa.from('admin_settings').select('password').eq('id', 1).single();
   if(error || !data){
     errEl.className = 'msg-status err';
-    errEl.textContent = 'خطأ في الاتصال بالخادم';
+    errEl.textContent = 'Gateway handshake response breakdown error.';
     return;
   }
   if(input === data.password){
@@ -890,11 +804,10 @@ async function tryAdminLogin(){
     goToAdmin();
   } else {
     errEl.className = 'msg-status err';
-    errEl.textContent = 'كلمة المرور غير صحيحة';
+    errEl.textContent = 'Authorization token mismatched validation checks.';
   }
 }
 
-// دعم مفتاح Enter في نافذة الدخول
 document.getElementById('adminPassInput').addEventListener('keydown', (e) => {
   if(e.key === 'Enter') tryAdminLogin();
 });
@@ -919,7 +832,7 @@ function adminLogout(){
   goToSite();
 }
 
-/* ================== تبويبات لوحة التحكم ================== */
+/* ================== BACKEND PANEL INTERACTION ================== */
 function switchAdminTab(tab){
   document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
@@ -934,19 +847,19 @@ async function loadAdminData(){
   await loadAdminMessages();
 }
 
-/* ================== محرر المقال الغني ================== */
+/* ================== RICH METADATA TEXT COMPILING ENGINE ================== */
 function fmt(cmd, value=null){
   document.getElementById('postContent').focus();
   document.execCommand(cmd, false, value);
 }
 
 function insertLink(){
-  const url = prompt('أدخل رابط URL:');
+  const url = prompt('Provide Destination Target URL link:');
   if(url) fmt('createLink', url);
 }
 
 function insertImageByUrl(){
-  const url = prompt('أدخل رابط الصورة (URL):');
+  const url = prompt('Provide Target Image Asset Asset Source (URL):');
   if(url) fmt('insertImage', url);
 }
 
@@ -965,14 +878,14 @@ async function uploadContentImage(e){
   const file = e.target.files[0];
   if(!file) return;
   const statusEl = document.getElementById('uploadStatus');
-  statusEl.textContent = '⏳ جاري رفع الصورة...';
+  statusEl.textContent = '⏳ Streaming binary cloud stream pipeline...';
   try{
     const url = await uploadFileToStorage(file);
     document.getElementById('postContent').focus();
     document.execCommand('insertImage', false, url);
-    statusEl.textContent = '✅ تم إدراج الصورة';
+    statusEl.textContent = '✅ Cloud sync verified successfully.';
   }catch(err){
-    statusEl.textContent = '❌ فشل الرفع: ' + err.message;
+    statusEl.textContent = '❌ Sink asset failure pipeline: ' + err.message;
   }
   e.target.value = '';
   setTimeout(() => statusEl.textContent = '', 3000);
@@ -985,15 +898,15 @@ async function uploadCoverImage(e){
     const url = await uploadFileToStorage(file);
     document.getElementById('postCover').value = url;
   }catch(err){
-    alert('فشل رفع صورة الغلاف: ' + err.message);
+    alert('Cover cloud stream payload dropped failure: ' + err.message);
   }
   e.target.value = '';
 }
 
-/* ---- إدارة المقالات ---- */
+/* ---- STAGED POST CONTROLS ---- */
 function fillSectionSelect(){
   const sel = document.getElementById('postSection');
-  sel.innerHTML = `<option value="">بدون قسم</option>` +
+  sel.innerHTML = `<option value="">General Deployment Segment</option>` +
     sectionsCache.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
 }
 
@@ -1004,21 +917,21 @@ async function loadAdminPosts(){
   tbody.innerHTML = data.map(p => {
     const sec = sectionsCache.find(s => s.id === p.section_id);
     return `<tr>
-      <td>${esc(p.title)}</td>
-      <td>${sec ? esc(sec.name) : '-'}</td>
+      <td style="font-weight:600">${esc(p.title)}</td>
+      <td>${sec ? esc(sec.name) : 'General'}</td>
       <td>${fmtDate(p.created_at)}</td>
       <td class="row-actions">
-        <button class="icon-btn" onclick="editPost('${p.id}')">✏️ تعديل</button>
-        <button class="icon-btn danger" onclick="deletePost('${p.id}')">🗑️ حذف</button>
+        <button class="icon-btn" onclick="editPost('${p.id}')">✏️ Modify</button>
+        <button class="icon-btn danger" onclick="deletePost('${p.id}')">🗑️ Purge</button>
       </td>
     </tr>`;
-  }).join('') || `<tr><td colspan="4">لا توجد مقالات</td></tr>`;
+  }).join('') || `<tr><td colspan="4">No technical documents compiled.</td></tr>`;
 }
 
 async function editPost(id){
   const {data: p} = await supa.from('posts').select('*').eq('id', id).single();
   if(!p) return;
-  document.getElementById('postFormTitle').textContent = '✏️ تعديل المقال';
+  document.getElementById('postFormTitle').textContent = '✏️ Modify Document Log';
   document.getElementById('postId').value = p.id;
   document.getElementById('postTitle').value = p.title;
   document.getElementById('postSection').value = p.section_id || '';
@@ -1028,8 +941,13 @@ async function editPost(id){
   window.scrollTo(0,0);
 }
 
+// Mobile responsive drawer toggle hook
+document.getElementById('burgerBtn').addEventListener('click', () => {
+  document.getElementById('navLinks').classList.toggle('open');
+});
+
 function resetPostForm(){
-  document.getElementById('postFormTitle').textContent = '➕ إضافة مقال جديد';
+  document.getElementById('postFormTitle').textContent = '➕ Stage New Post';
   document.getElementById('postId').value = '';
   document.getElementById('postTitle').value = '';
   document.getElementById('postSection').value = '';
@@ -1046,7 +964,7 @@ async function savePost(){
   const excerpt = document.getElementById('postExcerpt').value.trim();
   const content = document.getElementById('postContent').innerHTML.trim();
 
-  if(!title || !content){ alert('يرجى إدخال العنوان والمحتوى'); return; }
+  if(!title || !content){ alert('Title parameters and deployment content parameters are strictly required.'); return; }
 
   const payload = {title, section_id, cover_url, excerpt, content};
   let error;
@@ -1055,40 +973,40 @@ async function savePost(){
   } else {
     ({error} = await supa.from('posts').insert(payload));
   }
-  if(error){ alert('خطأ: ' + error.message); return; }
+  if(error){ alert('Fault event failure logic: ' + error.message); return; }
   resetPostForm();
   await loadAdminPosts();
 }
 
 async function deletePost(id){
-  if(!confirm('هل أنت متأكد من حذف هذا المقال؟')) return;
+  if(!confirm('Execute deployment structural purge operation routine? Action cannot be reversed.')) return;
   await supa.from('posts').delete().eq('id', id);
   await loadAdminPosts();
 }
 
-/* ---- إدارة الأقسام ---- */
+/* ---- ECOSYSTEM CONTROLS ---- */
 async function loadAdminSections(){
   const tbody = document.getElementById('sectionsTableBody');
   tbody.innerHTML = sectionsCache.map(s => `
     <tr>
-      <td>${esc(s.name)}</td>
-      <td>${esc(s.slug)}</td>
+      <td style="font-weight:600">${esc(s.name)}</td>
+      <td><code>${esc(s.slug)}</code></td>
       <td class="row-actions">
-        <button class="icon-btn danger" onclick="deleteSection('${s.id}')">🗑️ حذف</button>
+        <button class="icon-btn danger" onclick="deleteSection('${s.id}')">🗑️ Purge</button>
       </td>
     </tr>
-  `).join('') || `<tr><td colspan="3">لا توجد أقسام</td></tr>`;
+  `).join('') || `<tr><td colspan="3">No segments initialized.</td></tr>`;
 }
 
 async function addSection(){
   const name = document.getElementById('sectionName').value.trim();
   let slug = document.getElementById('sectionSlug').value.trim();
-  if(!name){ alert('يرجى إدخال اسم القسم'); return; }
+  if(!name){ alert('Segment nomenclature value missing.'); return; }
   if(!slug){
-    slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '') || ('section-' + Date.now());
+    slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '') || ('segment-' + Date.now());
   }
   const {error} = await supa.from('sections').insert({name, slug, sort_order: sectionsCache.length});
-  if(error){ alert('خطأ: ' + error.message); return; }
+  if(error){ alert('Provision loop error exception: ' + error.message); return; }
   document.getElementById('sectionName').value = '';
   document.getElementById('sectionSlug').value = '';
   await loadSections();
@@ -1096,65 +1014,57 @@ async function addSection(){
 }
 
 async function deleteSection(id){
-  if(!confirm('حذف هذا القسم؟ (لن يتم حذف المقالات المرتبطة به)')) return;
+  if(!confirm('Drop segment entry pipeline mapping? Associated articles references fallback to general category structure.')) return;
   await supa.from('sections').delete().eq('id', id);
   await loadSections();
   await loadAdminSections();
 }
 
-/* ---- إدارة الرسائل ---- */
+/* ---- INBOUND MESSAGES FLOW ---- */
 async function loadAdminMessages(){
   const {data, error} = await supa.from('messages').select('*').order('created_at', {ascending:false});
   if(error) return;
   const tbody = document.getElementById('messagesTableBody');
   tbody.innerHTML = data.map(m => `
     <tr>
-      <td>${esc(m.sender_name)}</td>
-      <td>${esc(m.email)}</td>
-      <td style="max-width:280px; white-space:normal">${esc(m.message)}</td>
-      <td>${fmtDate(m.created_at)}</td>
+      <td style="font-weight:600">${esc(m.sender_name)}</td>
+      <td><a href="mailto:${esc(m.email)}" style="color:var(--accent); text-decoration:underline">${esc(m.email)}</a></td>
+      <td style="max-width:320px; white-space:normal; font-size:13px">${esc(m.message)}</td>
+      <td style="font-size:12px; color:var(--text-dim)">${fmtDate(m.created_at)}</td>
       <td><button class="icon-btn danger" onclick="deleteMessage('${m.id}')">🗑️</button></td>
     </tr>
-  `).join('') || `<tr><td colspan="5">لا توجد رسائل</td></tr>`;
+  `).join('') || `<tr><td colspan="5">Inbound stream terminal clean empty.</td></tr>`;
 }
 async function deleteMessage(id){
   await supa.from('messages').delete().eq('id', id);
   await loadAdminMessages();
 }
 
-/* ---- تغيير كلمة المرور ---- */
+/* ---- KEYPASS CHANGEOVER CONFIGS ---- */
 async function changeAdminPassword(){
   const newPass = document.getElementById('newPassword').value.trim();
   const statusEl = document.getElementById('settingsStatus');
   if(newPass.length < 4){
     statusEl.className = 'msg-status err';
-    statusEl.textContent = 'كلمة المرور يجب أن تكون 4 أحرف على الأقل';
+    statusEl.textContent = 'Token parameter strings density must contain at least 4 chars.';
     return;
   }
   const {error} = await supa.from('admin_settings').update({password: newPass}).eq('id', 1);
   if(error){
     statusEl.className = 'msg-status err';
-    statusEl.textContent = 'خطأ: ' + error.message;
+    statusEl.textContent = 'Pipeline execution fault failure: ' + error.message;
     return;
   }
   statusEl.className = 'msg-status ok';
-  statusEl.textContent = 'تم تحديث كلمة المرور بنجاح';
+  statusEl.textContent = 'Security authorization pass token changed successfully.';
   document.getElementById('newPassword').value = '';
 }
 
-/* ================== قائمة الموبايل ================== */
-document.getElementById('burgerBtn').addEventListener('click', () => {
-  document.getElementById('navLinks').classList.toggle('open');
-});
-
-/* ================== بدء التشغيل ================== */
+/* ================== INITIATE RUNTIME PIPELINE ================== */
 (async function init(){
   await loadSections();
   await loadPosts();
   router();
-  if(isAdmin()){
-    // يمكن تفعيلها تلقائيًا إذا رغبت، متروكة معطلة حاليًا لأمان أكثر
-  }
 })();
 </script>
 </body>
