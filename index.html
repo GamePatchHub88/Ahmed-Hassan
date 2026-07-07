@@ -3746,6 +3746,13 @@
           </div>
           <div
             class="admin-tab"
+            data-tab="newsletter"
+            onclick="switchAdminTab('newsletter')"
+          >
+            📬 Newsletter
+          </div>
+          <div
+            class="admin-tab"
             data-tab="settings"
             onclick="switchAdminTab('settings')"
           >
@@ -4406,6 +4413,73 @@
                 </tr>
               </thead>
               <tbody id="messagesTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="admin-panel" id="panel-newsletter">
+          <div class="admin-card" style="margin-bottom: 20px">
+            <h3 style="margin-bottom: 14px">📨 Compose &amp; Send Message</h3>
+            <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 14px">
+              Write a custom message and send it to every active subscriber
+              right now.
+            </p>
+            <input
+              type="text"
+              id="newsletterSubject"
+              placeholder="Subject / موضوع الرسالة"
+              style="
+                width: 100%;
+                margin-bottom: 10px;
+                padding: 10px 14px;
+                border-radius: 8px;
+                border: 1px solid var(--border);
+                background: var(--bg-alt, #1a1a1a);
+                color: inherit;
+              "
+            />
+            <textarea
+              id="newsletterMessageBody"
+              rows="8"
+              placeholder="Message content / نص الرسالة (يدعم HTML بسيط)"
+              style="
+                width: 100%;
+                margin-bottom: 10px;
+                padding: 10px 14px;
+                border-radius: 8px;
+                border: 1px solid var(--border);
+                background: var(--bg-alt, #1a1a1a);
+                color: inherit;
+                resize: vertical;
+              "
+            ></textarea>
+            <div class="row-actions">
+              <button
+                type="button"
+                class="btn"
+                onclick="sendNewsletterBlast()"
+                id="sendNewsletterBtn"
+              >
+                🚀 Send to All Subscribers
+              </button>
+            </div>
+            <div class="msg-status" id="newsletterAdminStatus"></div>
+          </div>
+
+          <div class="admin-card">
+            <h3 style="margin-bottom: 14px">
+              👥 Subscribers (<span id="subscriberCount">0</span>)
+            </h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Subscribed At</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="subscribersTableBody"></tbody>
             </table>
           </div>
         </div>
@@ -5650,10 +5724,13 @@
           const email = document.getElementById("newsletterEmail").value.trim();
           const statusEl = document.getElementById("newsletterStatus");
           try {
-            const { error } = await supa.from("subscribers").insert({ email });
+            const { error } = await supa
+              .from("subscribers")
+              .insert({ email, subscribed_at: new Date().toISOString() });
             if (error) throw error;
             statusEl.className = "msg-status ok";
-            statusEl.textContent = "✅ Subscribed successfully!";
+            statusEl.textContent =
+              "✅ Subscribed successfully! Check your inbox for a welcome message soon.";
             document.getElementById("newsletterForm").reset();
           } catch (err) {
             statusEl.className = "msg-status err";
@@ -5760,6 +5837,7 @@
         await loadAdminRoadmaps();
         await loadAdminCourses();
         await loadAdminLeaderboard();
+        await loadAdminNewsletter();
       }
 
       /* ================== ADMIN: COURSES MANAGEMENT ================== */
@@ -6976,6 +7054,99 @@
       async function deleteMessage(id) {
         await supa.from("messages").delete().eq("id", id);
         await loadAdminMessages();
+      }
+
+      /* ---- NEWSLETTER: SUBSCRIBERS LIST + MANUAL SEND ---- */
+      // غيّر القيمة دي لنفس القيمة اللي حطيتها كـ secret اسمه ADMIN_FUNCTION_SECRET
+      // في Supabase Edge Functions. لازم تكون سلسلة طويلة وعشوائية وسرية.
+      const ADMIN_FUNCTION_SECRET = "1d3ee2283a645ce1723f6c797ce8dabd44ef73f2de4f4314";
+
+      async function loadAdminNewsletter() {
+        const { data, error } = await supa
+          .from("subscribers")
+          .select("*")
+          .order("subscribed_at", { ascending: false });
+        const tbody = document.getElementById("subscribersTableBody");
+        if (error) {
+          tbody.innerHTML = `<tr><td colspan="4">Could not load subscribers table.</td></tr>`;
+          return;
+        }
+        document.getElementById("subscriberCount").textContent = data.length;
+        tbody.innerHTML =
+          data
+            .map(
+              (s) => `
+    <tr>
+      <td>${esc(s.email)}</td>
+      <td style="font-size:12px; color:var(--text-dim)">${fmtDate(s.subscribed_at)}</td>
+      <td>${s.is_active ? "🟢 Active" : "⚪ Unsubscribed"}</td>
+      <td>
+        <button class="icon-btn" onclick="toggleSubscriberActive('${s.id}', ${s.is_active})">
+          ${s.is_active ? "Unsubscribe" : "Reactivate"}
+        </button>
+        <button class="icon-btn danger" onclick="deleteSubscriber('${s.id}')">🗑️</button>
+      </td>
+    </tr>
+  `,
+            )
+            .join("") || `<tr><td colspan="4">No subscribers yet.</td></tr>`;
+      }
+
+      async function toggleSubscriberActive(id, currentlyActive) {
+        await supa
+          .from("subscribers")
+          .update({ is_active: !currentlyActive })
+          .eq("id", id);
+        await loadAdminNewsletter();
+      }
+
+      async function deleteSubscriber(id) {
+        if (!confirm("Delete this subscriber permanently?")) return;
+        await supa.from("subscribers").delete().eq("id", id);
+        await loadAdminNewsletter();
+      }
+
+      async function sendNewsletterBlast() {
+        const subject = document.getElementById("newsletterSubject").value.trim();
+        const message = document
+          .getElementById("newsletterMessageBody")
+          .value.trim();
+        const statusEl = document.getElementById("newsletterAdminStatus");
+        const btn = document.getElementById("sendNewsletterBtn");
+
+        if (!subject || !message) {
+          statusEl.className = "msg-status err";
+          statusEl.textContent = "Please fill in both subject and message.";
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "⏳ Sending...";
+        statusEl.className = "msg-status";
+        statusEl.textContent = "";
+
+        try {
+          const { data, error } = await supa.functions.invoke("send-newsletter", {
+            body: {
+              subject,
+              message,
+              adminSecret: ADMIN_FUNCTION_SECRET,
+            },
+          });
+          if (error) throw error;
+          statusEl.className = "msg-status ok";
+          statusEl.textContent = `✅ Sent to ${data.sent} subscriber(s).${
+            data.failed ? " Failed: " + data.failed : ""
+          }`;
+          document.getElementById("newsletterSubject").value = "";
+          document.getElementById("newsletterMessageBody").value = "";
+        } catch (err) {
+          statusEl.className = "msg-status err";
+          statusEl.textContent = "Failed to send: " + err.message;
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "🚀 Send to All Subscribers";
+        }
       }
 
       /* ---- KEYPASS CHANGEOVER CONFIGS ---- */
