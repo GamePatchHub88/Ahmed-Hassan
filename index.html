@@ -12,14 +12,17 @@
 :root{
   --bg: #fbfbfd;
   --bg-soft: #f0f3f8;
-  --card: #ffffff;
+  --card: rgba(255,255,255,0.9);
+  --card-solid: #ffffff;
   --border: #dde3ec;
   --text: #1a2233;
   --text-dim: #5b6577;
   --accent: #ef4444; /* Tech Red */
   --accent-hover: #dc2626;
+  --accent-rgb: 239,68,68;
   --dark-hold: #1e293b;
   --radius: 12px;
+  --glass-blur: 14px;
   --shadow: 0 2px 8px -2px rgba(30,41,59,0.08), 0 1px 3px -1px rgba(30,41,59,0.06);
   --shadow-md: 0 8px 24px -6px rgba(30,41,59,0.12), 0 3px 8px -3px rgba(30,41,59,0.08);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -27,16 +30,24 @@
 html[data-theme="dark"]{
   --bg: #0e1420;
   --bg-soft: #151d2e;
-  --card: #1a2336;
+  --card: rgba(26,35,54,0.9);
+  --card-solid: #1a2336;
   --border: #2e3a52;
   --text: #e8edf5;
   --text-dim: #9aa7bd;
   --accent: #ef4444;
   --accent-hover: #f87171;
+  --accent-rgb: 239,68,68;
   --shadow: 0 2px 8px -2px rgba(0,0,0,0.3), 0 1px 3px -1px rgba(0,0,0,0.2);
   --shadow-md: 0 8px 24px -6px rgba(0,0,0,0.4), 0 3px 8px -3px rgba(0,0,0,0.3);
 }
 body, .post-cover, .editor-area{ transition: background-color .3s ease, color .3s ease, border-color .3s ease; }
+/* Glass surfaces: cards sit at 0.9 opacity with a soft blur so the grid background shows through */
+.post-card, .avatar-card, .section-hero, .comment-item, .modal-box, .editor-area,
+.toast, .cmdk-panel, .cr-sidebar, .gm-stat-box{
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 *{box-sizing:border-box; margin:0; padding:0}
@@ -58,8 +69,9 @@ img{max-width:100%; display:block}
 /* ===== Header ===== */
 header{
   position:sticky; top:0; z-index:50;
-  background:rgba(255, 255, 255, 0.85);
+  background:var(--card);
   backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
   border-bottom:1px solid var(--border);
 }
 .nav-wrap{
@@ -173,6 +185,61 @@ nav.links a:hover::after, nav.links a.active::after{width:100%}
 }
 .scroll-top-btn.show{opacity:1; pointer-events:auto;}
 .scroll-top-btn:hover{background: var(--accent);}
+
+/* ===== Toast notifications (2026 refresh: replaces alert()) ===== */
+.toast-stack{
+  position:fixed; bottom:28px; left:28px; z-index:300;
+  display:flex; flex-direction:column; gap:10px; max-width:320px;
+}
+.toast{
+  background:var(--card); border:1px solid var(--border); border-left:4px solid var(--text-dim);
+  border-radius:10px; padding:12px 16px; font-size:14px; color:var(--text);
+  box-shadow:var(--shadow-md); opacity:0; transform:translateY(12px); transition:.25s;
+}
+.toast.show{opacity:1; transform:translateY(0);}
+.toast.ok{border-left-color:#22c55e}
+.toast.err{border-left-color:var(--accent)}
+.toast.info{border-left-color:#3b82f6}
+
+/* ===== Offline banner ===== */
+.offline-banner{
+  position:fixed; top:0; left:0; right:0; z-index:400;
+  background:var(--accent); color:#fff; text-align:center; font-size:13px; font-weight:600;
+  padding:8px 12px; transform:translateY(-100%); transition:.3s;
+}
+.offline-banner.show{transform:translateY(0);}
+
+/* ===== Unified Like button (shared by post likes & comment likes, one per device) ===== */
+.like-btn{
+  display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px;
+  border:1px solid var(--border); background:var(--card); color:var(--text-dim);
+  font-size:13px; font-weight:600; cursor:pointer; transition:.2s;
+}
+.like-btn:hover{border-color:var(--accent); color:var(--accent); transform:translateY(-1px);}
+.like-btn.liked{background:rgba(var(--accent-rgb),0.12); border-color:var(--accent); color:var(--accent);}
+.like-btn.liked .like-heart{ animation: heartPop .35s ease; }
+.like-btn:disabled{cursor:default;}
+@keyframes heartPop{ 0%{transform:scale(1)} 40%{transform:scale(1.4)} 100%{transform:scale(1)} }
+
+/* ===== Command palette ("/" or Ctrl+K to search) ===== */
+.cmdk-overlay{
+  position:fixed; inset:0; background:rgba(10,14,22,0.5); z-index:500;
+  display:none; align-items:flex-start; justify-content:center; padding-top:12vh;
+}
+.cmdk-overlay.show{display:flex;}
+.cmdk-panel{
+  width:100%; max-width:560px; background:var(--card); border:1px solid var(--border);
+  border-radius:12px; box-shadow:var(--shadow-md); overflow:hidden;
+}
+.cmdk-panel input{
+  width:100%; border:none; background:transparent; color:var(--text); font-size:16px;
+  padding:16px 18px; outline:none; border-bottom:1px solid var(--border);
+}
+.cmdk-results{max-height:50vh; overflow-y:auto;}
+.cmdk-item{padding:12px 18px; cursor:pointer; font-size:14px; color:var(--text); border-bottom:1px solid var(--border);}
+.cmdk-item:hover, .cmdk-item.active{background:var(--bg-soft); color:var(--accent);}
+.cmdk-empty{padding:18px; color:var(--text-dim); font-size:13px; text-align:center;}
+.cmdk-hint{padding:8px 18px; font-size:11px; color:var(--text-dim); border-top:1px solid var(--border);}
 
 /* ===== Search Bar Integration ===== */
 .search-container{max-width:1100px; margin:20px auto 10px; padding:0 20px}
@@ -800,6 +867,15 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
   </header>
 
   <button class="scroll-top-btn" id="scrollTopBtn" title="Back to top" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+  <div class="offline-banner" id="offlineBanner">📡 You're offline — some features (comments, likes, forms) won't work until you're back online.</div>
+  <div class="cmdk-overlay" id="cmdkOverlay" onclick="if(event.target===this) closeCmdk()">
+    <div class="cmdk-panel">
+      <input type="text" id="cmdkInput" placeholder="Search articles… (Esc to close)" oninput="cmdkSearch(this.value)">
+      <div class="cmdk-results" id="cmdkResults"><div class="cmdk-empty">Start typing to search all articles</div></div>
+      <div class="cmdk-hint">↵ Open · Esc Close · Press "/" anywhere to search</div>
+    </div>
+  </div>
 
   <div id="view-home">
     <section class="hero">
@@ -1495,6 +1571,7 @@ async function showPost(id){
     <div id="tocBox"></div>
     <div class="post-content" id="postContentBody">${p.content}</div>
     <div class="helpful-box">
+      <button class="like-btn" id="postLikeBtn" onclick="likePost('${p.id}')"><span class="like-heart">❤️</span> Like (<span id="postLikeCount">${p.likes || 0}</span>)</button>
       <span>Was this article helpful?</span>
       <button class="icon-btn" id="helpfulYesBtn" onclick="voteHelpful('${p.id}','yes')">👍 <span id="helpfulYes">${p.helpful_yes || 0}</span></button>
       <button class="icon-btn" id="helpfulNoBtn" onclick="voteHelpful('${p.id}','no')">👎 <span id="helpfulNo">${p.helpful_no || 0}</span></button>
@@ -1536,6 +1613,7 @@ async function showPost(id){
   wireCopyCodeButtons();
   initReadingProgress();
   restoreHelpfulVoteState(p.id);
+  restorePostLikeState(p.id);
   _listenState = 'stopped';
   if('speechSynthesis' in window) window.speechSynthesis.cancel();
 }
@@ -1548,12 +1626,18 @@ async function bumpPostViews(id, currentViews){
   }catch(err){ /* views column may not exist yet — safely ignore */ }
 }
 
-function sharePost(id){
+async function sharePost(id){
   const url = `${location.origin}${location.pathname}#/post/${id}`;
+  const post = postsCache.find(p => p.id === id);
+  // Prefer the native OS share sheet (2026: works across mobile & desktop browsers) when available.
+  if(navigator.share){
+    try{ await navigator.share({title: post ? post.title : 'Ah Stack', url}); return; }catch(e){ /* user cancelled — fall through to copy */ }
+  }
   navigator.clipboard.writeText(url).then(() => {
     const btn = document.getElementById('shareBtn');
     if(btn){ const old = btn.textContent; btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = old, 2000); }
-  }).catch(() => alert('Link: ' + url));
+    toast('Link copied to clipboard 🔗', 'ok');
+  }).catch(() => toast('Link: ' + url, 'info'));
 }
 
 function renderRelatedArticles(p, sec){
@@ -1636,7 +1720,7 @@ function renderCommentNode(c, all, postId){
       <div class="body">${esc(c.body)}</div>
       <div class="meta">💬 ${esc(c.author_name || 'Anonymous')} · ${fmtDate(c.created_at)}</div>
       <div class="comment-actions">
-        <button class="comment-like-btn ${liked ? 'liked' : ''}" onclick="likeComment('${c.id}','${postId}')" ${liked ? 'disabled' : ''}>👍 Like (<span id="likeCount-${c.id}">${c.likes || 0}</span>)</button>
+        <button class="comment-like-btn like-btn ${liked ? 'liked' : ''}" onclick="likeComment('${c.id}','${postId}')" ${liked ? 'disabled' : ''}><span class="like-heart">👍</span> Like (<span id="likeCount-${c.id}">${c.likes || 0}</span>)</button>
         <button class="comment-reply-btn" onclick="toggleReplyForm('${c.id}')">↩️ Reply</button>
       </div>
       <form class="comment-reply-form" id="replyForm-${c.id}" onsubmit="event.preventDefault(); submitComment('${postId}','${c.id}')">
@@ -1704,7 +1788,7 @@ async function submitComment(postId, parentId){
       statusEl.className = 'msg-status err';
       statusEl.textContent = '❌ Could not post comment: ' + err.message;
     } else {
-      alert('❌ Could not post reply: ' + err.message);
+      toast('❌ Could not post reply: ' + err.message);
     }
   }
 }
@@ -1953,7 +2037,7 @@ function toggleFocusMode(){
 let _listenState = 'stopped'; // stopped | playing | paused
 function toggleListen(postId){
   const btn = document.getElementById('listenBtn');
-  if(!('speechSynthesis' in window)){ alert('Text-to-speech is not supported in this browser.'); return; }
+  if(!('speechSynthesis' in window)){ toast('Text-to-speech is not supported in this browser.'); return; }
   if(_listenState === 'stopped'){
     const content = document.getElementById('postContentBody');
     const text = content ? content.innerText : '';
@@ -2182,10 +2266,10 @@ async function saveCourse(){
   const slugInput = document.getElementById('crSlug').value.trim();
   const cover_url = document.getElementById('crCover').value.trim();
   const description = document.getElementById('crDescription').value.trim();
-  if(!title){ alert('Title is required.'); return; }
+  if(!title){ toast('Title is required.'); return; }
 
   const baseSlug = slugify(slugInput || title);
-  if(!baseSlug){ alert('Could not generate a valid slug from this title — please type a slug manually using letters/numbers.'); return; }
+  if(!baseSlug){ toast('Could not generate a valid slug from this title — please type a slug manually using letters/numbers.'); return; }
   const slug = await ensureUniqueSlug('courses', baseSlug, id || null);
   document.getElementById('crSlug').value = slug;
 
@@ -2193,7 +2277,7 @@ async function saveCourse(){
   const {error} = id
     ? await supa.from('courses').update(payload).eq('id', id)
     : await supa.from('courses').insert(payload);
-  if(error){ alert('Failed to save course: ' + error.message); return; }
+  if(error){ toast('Failed to save course: ' + error.message); return; }
   resetCourseForm();
   await loadAdminCourses();
 }
@@ -2309,13 +2393,13 @@ async function saveLesson(){
   const video_url = document.getElementById('lessonVideoUrl').value.trim();
   const content = document.getElementById('lessonContent').value.trim();
   const lesson_order = parseInt(document.getElementById('lessonOrder').value, 10) || 0;
-  if(!title){ alert('Lesson title is required.'); return; }
+  if(!title){ toast('Lesson title is required.'); return; }
 
   const payload = {course_id: courseId, title, video_url: video_url || null, content, lesson_order};
   const {error} = id
     ? await supa.from('course_lessons').update(payload).eq('id', id)
     : await supa.from('course_lessons').insert(payload);
-  if(error){ alert('Failed to save lesson: ' + error.message); return; }
+  if(error){ toast('Failed to save lesson: ' + error.message); return; }
   resetLessonForm();
   await loadLessonsTable(courseId);
   await loadAdminCourses();
@@ -2345,11 +2429,11 @@ async function saveRoadmap(){
   const title = document.getElementById('rmTitle').value.trim();
   const slugInput = document.getElementById('rmSlug').value.trim();
   const description = document.getElementById('rmDescription').value.trim();
-  if(!title){ alert('Title is required.'); return; }
+  if(!title){ toast('Title is required.'); return; }
 
   // Auto-generate a clean slug from the title if left empty, otherwise sanitize whatever was typed
   const baseSlug = slugify(slugInput || title);
-  if(!baseSlug){ alert('Could not generate a valid slug from this title — please type a slug manually using letters/numbers.'); return; }
+  if(!baseSlug){ toast('Could not generate a valid slug from this title — please type a slug manually using letters/numbers.'); return; }
   const slug = await ensureUniqueSlug('roadmaps', baseSlug, id || null);
   document.getElementById('rmSlug').value = slug;
 
@@ -2357,7 +2441,7 @@ async function saveRoadmap(){
   const {error} = id
     ? await supa.from('roadmaps').update(payload).eq('id', id)
     : await supa.from('roadmaps').insert(payload);
-  if(error){ alert('Failed to save roadmap: ' + error.message); return; }
+  if(error){ toast('Failed to save roadmap: ' + error.message); return; }
   resetRoadmapForm();
   await loadAdminRoadmaps();
 }
@@ -2472,13 +2556,13 @@ async function saveStep(){
   const description = document.getElementById('stepDescription').value.trim();
   const resource_url = document.getElementById('stepResourceUrl').value.trim();
   const step_order = parseInt(document.getElementById('stepOrder').value, 10) || 0;
-  if(!title){ alert('Step title is required.'); return; }
+  if(!title){ toast('Step title is required.'); return; }
 
   const payload = {roadmap_id: roadmapId, title, description, resource_url: resource_url || null, step_order};
   const {error} = id
     ? await supa.from('roadmap_steps').update(payload).eq('id', id)
     : await supa.from('roadmap_steps').insert(payload);
-  if(error){ alert('Failed to save step: ' + error.message); return; }
+  if(error){ toast('Failed to save step: ' + error.message); return; }
   resetStepForm();
   await loadStepsTable(roadmapId);
   await loadAdminRoadmaps();
@@ -2633,7 +2717,7 @@ async function uploadCoverImage(e){
     const url = await uploadFileToStorage(file);
     document.getElementById('postCover').value = url;
   }catch(err){
-    alert('Cover cloud stream payload dropped failure: ' + err.message);
+    toast('Cover cloud stream payload dropped failure: ' + err.message);
   }
   e.target.value = '';
 }
@@ -2645,7 +2729,7 @@ async function uploadCourseCover(e){
     const url = await uploadFileToStorage(file);
     document.getElementById('crCover').value = url;
   }catch(err){
-    alert('Cover upload failed: ' + err.message);
+    toast('Cover upload failed: ' + err.message);
   }
   e.target.value = '';
 }
@@ -2697,20 +2781,31 @@ document.getElementById('burgerBtn').addEventListener('click', () => {
   document.getElementById('navLinks').classList.toggle('open');
 });
 
-/* ================== DARK MODE ================== */
-function applyTheme(theme){
-  document.documentElement.setAttribute('data-theme', theme);
+/* ================== DARK MODE (light / dark / auto-system) ================== */
+const systemDarkQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+function applyTheme(mode){
+  const resolved = mode === 'auto' ? (systemDarkQuery && systemDarkQuery.matches ? 'dark' : 'light') : mode;
+  document.documentElement.setAttribute('data-theme', resolved);
   const btn = document.getElementById('themeToggleBtn');
-  if(btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
-  localStorage.setItem('theme', theme);
+  if(btn){
+    btn.textContent = mode === 'auto' ? '🖥️' : (resolved === 'dark' ? '☀️' : '🌙');
+    btn.title = mode === 'auto' ? 'Theme: Auto (system) — click for Light' : (resolved === 'dark' ? 'Theme: Dark — click for Auto' : 'Theme: Light — click for Dark');
+  }
+  localStorage.setItem('theme_mode', mode);
 }
 function toggleTheme(){
-  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-  applyTheme(current === 'dark' ? 'light' : 'dark');
+  const current = localStorage.getItem('theme_mode') || 'light';
+  const next = current === 'light' ? 'dark' : current === 'dark' ? 'auto' : 'light';
+  applyTheme(next);
 }
 (function initTheme(){
-  const saved = localStorage.getItem('theme');
-  applyTheme(saved || 'light');
+  const saved = localStorage.getItem('theme_mode') || localStorage.getItem('theme') || 'light';
+  applyTheme(saved);
+  if(systemDarkQuery){
+    systemDarkQuery.addEventListener('change', () => {
+      if((localStorage.getItem('theme_mode') || 'light') === 'auto') applyTheme('auto');
+    });
+  }
 })();
 
 /* ================== SCROLL TO TOP ================== */
@@ -2744,7 +2839,7 @@ async function savePost(){
   const published = document.getElementById('postPublished').checked;
   const content = document.getElementById('postContent').innerHTML.trim();
 
-  if(!title || !content){ alert('Title parameters and deployment content parameters are strictly required.'); return; }
+  if(!title || !content){ toast('Title parameters and deployment content parameters are strictly required.'); return; }
 
   const payload = {title, section_id, cover_url, excerpt, content, published};
   let error;
@@ -2755,7 +2850,7 @@ async function savePost(){
     ({error} = await supa.from('posts').insert({...payload, tags}));
     if(error) ({error} = await supa.from('posts').insert(payload));
   }
-  if(error){ alert('Fault event failure logic: ' + error.message); return; }
+  if(error){ toast('Fault event failure logic: ' + error.message); return; }
   resetPostForm();
   await loadAdminPosts();
 }
@@ -2783,12 +2878,12 @@ async function loadAdminSections(){
 async function addSection(){
   const name = document.getElementById('sectionName').value.trim();
   let slug = document.getElementById('sectionSlug').value.trim();
-  if(!name){ alert('Segment nomenclature value missing.'); return; }
+  if(!name){ toast('Segment nomenclature value missing.'); return; }
   if(!slug){
     slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '') || ('segment-' + Date.now());
   }
   const {error} = await supa.from('sections').insert({name, slug, sort_order: sectionsCache.length});
-  if(error){ alert('Provision loop error exception: ' + error.message); return; }
+  if(error){ toast('Provision loop error exception: ' + error.message); return; }
   document.getElementById('sectionName').value = '';
   document.getElementById('sectionSlug').value = '';
   await loadSections();
@@ -3210,7 +3305,7 @@ function gmUpdateNavPoints(){
 function gmSaveDisplayNameFromInput(){
   const name = document.getElementById('gmNameInput').value.trim();
   gmSetDisplayName(name);
-  alert(name ? '✅ Name saved! It will appear on the admin leaderboard.' : 'Name cleared.');
+  toast(name ? '✅ Name saved! It will appear on the admin leaderboard.' : 'Name cleared.');
 }
 
 function gmShowToast(badge){
@@ -3446,10 +3541,13 @@ async function showQuestion(id){
 /* ================== BUILT-IN AUTO-FORMAT ENGINE ================== */
 function autoFetchCoverImage(){
   const title = document.getElementById('postTitle').value.trim();
-  if(!title){ alert('Type an article title first so we know what image to fetch.'); return; }
-  const keywords = encodeURIComponent(title.split(' ').slice(0, 4).join(','));
-  const url = `https://source.unsplash.com/1200x630/?${keywords}`;
+  if(!title){ toast('Type an article title first so we know what image to fetch.', 'err'); return; }
+  // source.unsplash.com was discontinued — picsum.photos with a title-derived seed gives a
+  // stable, working placeholder cover instead of a broken image link.
+  const seed = encodeURIComponent(title.trim().toLowerCase().replace(/\s+/g,'-').slice(0, 40) || 'ahstack');
+  const url = `https://picsum.photos/seed/${seed}/1200/630`;
   document.getElementById('postCover').value = url;
+  toast('Cover image fetched ✅', 'ok');
 }
 
 /* ================== HERO HEADLINE TYPING ANIMATION ================== */
@@ -3612,8 +3710,107 @@ function markReveal(container){
 }
 
 
+/* ================== TOAST NOTIFICATIONS (2026) ================== */
+function toast(message, type){
+  if(!type){
+    type = /❌|fail|error|Fault|missing|required|not supported/i.test(message) ? 'err'
+         : /✅|success|saved|updated|subscribed|posted/i.test(message) ? 'ok' : 'info';
+  }
+  const stack = document.getElementById('toastStack');
+  if(!stack){ console.log(message); return; }
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = message;
+  stack.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 300);
+  }, 4200);
+}
+
+/* ================== OFFLINE / ONLINE DETECTION ================== */
+function updateOnlineStatus(){
+  const banner = document.getElementById('offlineBanner');
+  if(!banner) return;
+  if(navigator.onLine){ banner.classList.remove('show'); }
+  else{ banner.classList.add('show'); }
+}
+window.addEventListener('online', () => { updateOnlineStatus(); toast('Back online ✅', 'ok'); });
+window.addEventListener('offline', () => { updateOnlineStatus(); toast('You are offline — some actions are disabled.', 'err'); });
+
+/* ================== COMMAND PALETTE (Ctrl+K / "/") ================== */
+function openCmdk(){
+  const overlay = document.getElementById('cmdkOverlay');
+  overlay.classList.add('show');
+  const input = document.getElementById('cmdkInput');
+  input.value = '';
+  document.getElementById('cmdkResults').innerHTML = '<div class="cmdk-empty">Start typing to search all articles</div>';
+  setTimeout(() => input.focus(), 30);
+}
+function closeCmdk(){ document.getElementById('cmdkOverlay').classList.remove('show'); }
+function cmdkSearch(q){
+  const resultsEl = document.getElementById('cmdkResults');
+  const term = q.trim().toLowerCase();
+  if(!term){ resultsEl.innerHTML = '<div class="cmdk-empty">Start typing to search all articles</div>'; return; }
+  const matches = postsCache.filter(p =>
+    (p.title || '').toLowerCase().includes(term) ||
+    (p.excerpt || '').toLowerCase().includes(term)
+  ).slice(0, 8);
+  if(matches.length === 0){ resultsEl.innerHTML = '<div class="cmdk-empty">No articles match "' + esc(q) + '"</div>'; return; }
+  resultsEl.innerHTML = matches.map(p => `
+    <div class="cmdk-item" onclick="location.hash='#/post/${p.id}'; closeCmdk();">📝 ${esc(p.title)}</div>
+  `).join('');
+}
+document.addEventListener('keydown', (e) => {
+  const overlay = document.getElementById('cmdkOverlay');
+  const isOpen = overlay && overlay.classList.contains('show');
+  const tag = (e.target.tagName || '').toLowerCase();
+  const typing = tag === 'input' || tag === 'textarea' || e.target.isContentEditable;
+  if((e.key === '/' && !typing) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k')){
+    e.preventDefault();
+    isOpen ? closeCmdk() : openCmdk();
+  } else if(e.key === 'Escape' && isOpen){
+    closeCmdk();
+  }
+});
+
+/* ================== UNIFIED ARTICLE LIKE (one like per device, mirrors comment likes) ================== */
+const POST_LIKES_KEY = 'liked_posts_v1';
+function getLikedPosts(){
+  try{ return JSON.parse(localStorage.getItem(POST_LIKES_KEY) || '[]'); }catch(e){ return []; }
+}
+function markPostLiked(postId){
+  const liked = getLikedPosts();
+  liked.push(postId);
+  localStorage.setItem(POST_LIKES_KEY, JSON.stringify(liked));
+}
+async function likePost(postId){
+  if(getLikedPosts().includes(postId)){ toast('You already liked this article from this device 👍', 'info'); return; }
+  const btn = document.getElementById('postLikeBtn');
+  const countEl = document.getElementById('postLikeCount');
+  const current = parseInt((countEl && countEl.textContent) || '0', 10) || 0;
+  try{
+    const {data: p} = await supa.from('posts').select('likes').eq('id', postId).single();
+    const newVal = ((p && p.likes) || 0) + 1;
+    await supa.from('posts').update({likes: newVal}).eq('id', postId);
+    if(countEl) countEl.textContent = newVal;
+  }catch(err){
+    if(countEl) countEl.textContent = current + 1; // optimistic fallback if the "likes" column doesn't exist yet
+  }
+  markPostLiked(postId);
+  if(btn){ btn.classList.add('liked'); btn.disabled = true; }
+  toast('Liked! Thanks for the feedback ❤️', 'ok');
+}
+function restorePostLikeState(postId){
+  const btn = document.getElementById('postLikeBtn');
+  if(!btn) return;
+  if(getLikedPosts().includes(postId)){ btn.classList.add('liked'); btn.disabled = true; }
+}
+
 /* ================== INITIATE RUNTIME PIPELINE ================== */
 (async function init(){
+  updateOnlineStatus();
   await loadSiteBranding();
   await loadSections();
   await loadPosts();
