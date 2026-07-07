@@ -25,7 +25,8 @@
   --glass-blur: 14px;
   --shadow: 0 2px 8px -2px rgba(30,41,59,0.08), 0 1px 3px -1px rgba(30,41,59,0.06);
   --shadow-md: 0 8px 24px -6px rgba(30,41,59,0.12), 0 3px 8px -3px rgba(30,41,59,0.08);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Inter', 'Cairo', 'Noto Naskh Arabic', 'Noto Sans', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-multilang: 'Inter', 'Cairo', 'Noto Naskh Arabic', 'Noto Sans', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 }
 html[data-theme="dark"]{
   --bg: #0e1420;
@@ -48,7 +49,7 @@ body, .post-cover, .editor-area{ transition: background-color .3s ease, color .3
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
 }
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Cairo:wght@400;500;600;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap');
 
 *{box-sizing:border-box; margin:0; padding:0}
 body{
@@ -201,14 +202,6 @@ nav.links a:hover::after, nav.links a.active::after{width:100%}
 .toast.err{border-left-color:var(--accent)}
 .toast.info{border-left-color:#3b82f6}
 
-/* ===== Offline banner ===== */
-.offline-banner{
-  position:fixed; top:0; left:0; right:0; z-index:400;
-  background:var(--accent); color:#fff; text-align:center; font-size:13px; font-weight:600;
-  padding:8px 12px; transform:translateY(-100%); transition:.3s;
-}
-.offline-banner.show{transform:translateY(0);}
-
 /* ===== Unified Like button (shared by post likes & comment likes, one per device) ===== */
 .like-btn{
   display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:8px;
@@ -323,25 +316,55 @@ main{max-width:1100px; margin:0 auto; padding:20px}
 .post-meta{font-size:12px; color:var(--text-dim); display:flex; justify-content:space-between; margin-top:6px; border-top:1px solid var(--border); padding-top:12px}
 .empty-state{ text-align:center; padding:60px 20px; color:var(--text-dim); font-weight: 500;}
 
-/* ===== Post View ===== */
-.post-view{max-width:740px; margin:0 auto; padding:40px 20px}
+/* ===== Post View — beautiful layered background + glass content card ===== */
+.post-view{
+  max-width:800px; margin:0 auto; padding:40px 20px 60px; position:relative; isolation:isolate;
+}
+/* Soft glowing gradient blobs floating behind the article — theme aware, purely decorative */
+.post-view::before, .post-view::after{
+  content:''; position:absolute; z-index:-1; border-radius:50%; filter:blur(70px); opacity:.35;
+  pointer-events:none;
+}
+.post-view::before{
+  width:340px; height:340px; top:-80px; left:-120px;
+  background: radial-gradient(circle, var(--accent), transparent 70%);
+}
+.post-view::after{
+  width:280px; height:280px; bottom:120px; right:-100px;
+  background: radial-gradient(circle, #3b82f6, transparent 70%);
+}
 .back-btn{
   display:inline-flex; align-items:center; gap:6px; color:var(--text); font-weight:600;
   margin-bottom:24px; cursor:pointer; font-size: 14px;
 }
 .back-btn:hover { color: var(--accent); }
 .post-view .cover{border-radius:var(--radius); overflow:hidden; margin-bottom:24px; max-height:360px; border: 1px solid var(--border);}
-.post-view h1{font-size:36px; margin-bottom:12px; font-weight: 800; letter-spacing: -0.5px;}
+.post-view h1{
+  font-size:36px; margin-bottom:12px; font-weight: 800; letter-spacing: -0.5px;
+  font-family: var(--font-multilang);
+}
 .post-view .meta{color:var(--text-dim); font-size:14px; margin-bottom:26px}
-.post-content{font-size:17px; color: var(--text); line-height: 1.75;}
+/* The content itself sits on a translucent glass card (0.9 opacity) that floats above the blobs */
+.post-content{
+  font-size:17px; color: var(--text); line-height: 1.85; font-family: var(--font-multilang);
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  padding:32px clamp(18px, 4vw, 44px); box-shadow: var(--shadow-md);
+}
 .post-content img{max-width:100%; border-radius:8px; margin:16px 0; display:block; border: 1px solid var(--border);}
 .post-content blockquote{border-left:4px solid var(--accent); padding:4px 16px; color:var(--text-dim); font-style: italic; margin:18px 0}
 .post-content ul, .post-content ol{margin:10px 24px; padding-left: 10px;}
 .post-content h2, .post-content h3{margin:28px 0 12px; color:var(--text); font-weight: 700; scroll-margin-top:90px;}
+/* Automatic per-block language direction: Arabic/Hebrew paragraphs flip to RTL and align to the
+   right, Latin/CJK paragraphs stay LTR — all inferred live from each block's own text, so mixed
+   Arabic/English articles always format themselves correctly without any manual toggle. */
+.post-content p, .post-content li, .post-content h2, .post-content h3, .post-content blockquote{
+  unicode-bidi: plaintext; text-align: start;
+}
 .post-content p{margin-bottom:16px}
 .post-content pre{
   background:var(--dark-hold); color:#e2e8f0; padding:16px; border-radius:8px; overflow-x:auto;
   font-family:'JetBrains Mono', monospace; font-size:14px; margin:16px 0; position:relative;
+  unicode-bidi: normal; direction:ltr; text-align:left;
 }
 .post-content pre .copy-code-btn{
   position:absolute; top:8px; right:8px; background:rgba(255,255,255,0.1); color:#e2e8f0; border:1px solid rgba(255,255,255,0.2);
@@ -845,7 +868,11 @@ body.focus-mode .back-btn{position:fixed; top:16px; left:16px; background:var(--
 .editor-toolbar input[type="file"]{display:none}
 .editor-area{
   min-height:260px; max-height:520px; overflow-y:auto; padding:16px; font-size:15px;
-  color:var(--text); line-height:1.7; outline:none; background: #fff;
+  color:var(--text); line-height:1.7; outline:none; background: var(--card);
+  font-family: var(--font-multilang);
+}
+.editor-area p, .editor-area li, .editor-area h2, .editor-area h3, .editor-area blockquote{
+  unicode-bidi: plaintext; text-align: start;
 }
 .editor-area img{max-width:100%; border-radius:6px; margin:10px 0; display:block}
 .editor-area h2, .editor-area h3{margin:14px 0 8px}
@@ -913,7 +940,6 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
 
   <button class="scroll-top-btn" id="scrollTopBtn" title="Back to top" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
   <div class="toast-stack" id="toastStack" aria-live="polite"></div>
-  <div class="offline-banner" id="offlineBanner">📡 You're offline — some features (comments, likes, forms) won't work until you're back online.</div>
   <div class="cmdk-overlay" id="cmdkOverlay" onclick="if(event.target===this) closeCmdk()">
     <div class="cmdk-panel">
       <input type="text" id="cmdkInput" placeholder="Search articles… (Esc to close)" oninput="cmdkSearch(this.value)">
@@ -1264,7 +1290,7 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
               <button type="button" title="Undo" onclick="fmt('undo')">↩</button>
               <span class="upload-status" id="uploadStatus"></span>
             </div>
-            <div class="editor-area" id="postContent" contenteditable="true" data-placeholder="Inject comprehensive engineering content body markup right here..."></div>
+            <div class="editor-area" id="postContent" contenteditable="true" dir="auto" data-placeholder="Inject comprehensive engineering content body markup right here..."></div>
           </div>
         </div>
         <div class="row-actions" style="margin-top:14px">
@@ -1610,7 +1636,7 @@ async function showPost(id){
     <div class="reading-progress" id="readingProgress"></div>
     ${p.cover_url ? `<div class="cover"><img src="${esc(p.cover_url)}"></div>` : ''}
     ${p.featured_style ? `<span class="featured-badge">✨ Featured</span>` : ''}
-    <h1 class="${p.featured_style ? 'featured-title' : ''}">${esc(p.title)}</h1>
+    <h1 class="${p.featured_style ? 'featured-title' : ''}" dir="auto">${esc(p.title)}</h1>
     <div class="meta">
       <span style="color:var(--accent); font-weight:600">${sec ? esc(sec.name) : 'General'}</span> · ${fmtDate(p.created_at)}
       · 📖 ${readMins} min read · 👁️ <span id="postViewCount">${p.views || 0}</span> views
@@ -1620,7 +1646,7 @@ async function showPost(id){
     </div>
     ${tags.length ? `<div class="tag-chips">${tags.map(t => `<span class="tag-chip" onclick="filterByTag('${esc(t).replace(/'/g,"\\'")}')">#${esc(t)}</span>`).join('')}</div>` : ''}
     <div id="tocBox"></div>
-    <div class="post-content ${p.featured_style ? 'featured-style' : ''}" id="postContentBody">${p.content}</div>
+    <div class="post-content ${p.featured_style ? 'featured-style' : ''}" id="postContentBody" dir="auto">${p.content}</div>
     <div class="helpful-box">
       <button class="like-btn" id="postLikeBtn" onclick="likePost('${p.id}')"><span class="like-heart">❤️</span> Like (<span id="postLikeCount">${p.likes || 0}</span>)</button>
       <span>Was this article helpful?</span>
@@ -3845,20 +3871,6 @@ function toast(message, type){
     setTimeout(() => el.remove(), 300);
   }, 4200);
 }
-
-/* ================== OFFLINE / ONLINE DETECTION ================== */
-// navigator.onLine can read incorrectly for a moment right at page load in some browsers/hosting
-// setups, and fetch()-based probes fail on file:// for unrelated security reasons — neither is a
-// reliable one-shot "am I online" check. So instead of checking once on load, we ONLY react to the
-// browser's own genuine connectivity transition events (which are accurate), and the banner starts
-// hidden. This means real Supabase errors during use still surface via toast messages either way.
-function updateOnlineStatus(isOnlineEvent){
-  const banner = document.getElementById('offlineBanner');
-  if(!banner) return;
-  banner.classList.toggle('show', isOnlineEvent === false);
-}
-window.addEventListener('online', () => { updateOnlineStatus(true); toast('Back online ✅', 'ok'); });
-window.addEventListener('offline', () => { updateOnlineStatus(false); toast('You are offline — some actions are disabled.', 'err'); });
 
 /* ================== COMMAND PALETTE (Ctrl+K / "/") ================== */
 function openCmdk(){
