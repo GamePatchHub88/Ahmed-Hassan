@@ -4420,7 +4420,13 @@
         <div class="admin-panel" id="panel-newsletter">
           <div class="admin-card" style="margin-bottom: 20px">
             <h3 style="margin-bottom: 14px">📨 Compose &amp; Send Message</h3>
-            <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 14px">
+            <p
+              style="
+                color: var(--text-dim);
+                font-size: 13px;
+                margin-bottom: 14px;
+              "
+            >
               Write a custom message and send it to every active subscriber
               right now.
             </p>
@@ -4434,8 +4440,8 @@
                 padding: 10px 14px;
                 border-radius: 8px;
                 border: 1px solid var(--border);
-                background: var(--bg-alt, #1a1a1a);
-                color: inherit;
+                background: var(--card-solid);
+                color: var(--text);
               "
             />
             <textarea
@@ -4448,8 +4454,8 @@
                 padding: 10px 14px;
                 border-radius: 8px;
                 border: 1px solid var(--border);
-                background: var(--bg-alt, #1a1a1a);
-                color: inherit;
+                background: var(--card-solid);
+                color: var(--text);
                 resize: vertical;
               "
             ></textarea>
@@ -7059,7 +7065,8 @@
       /* ---- NEWSLETTER: SUBSCRIBERS LIST + MANUAL SEND ---- */
       // غيّر القيمة دي لنفس القيمة اللي حطيتها كـ secret اسمه ADMIN_FUNCTION_SECRET
       // في Supabase Edge Functions. لازم تكون سلسلة طويلة وعشوائية وسرية.
-      const ADMIN_FUNCTION_SECRET = "1d3ee2283a645ce1723f6c797ce8dabd44ef73f2de4f4314";
+      const ADMIN_FUNCTION_SECRET =
+        "1d3ee2283a645ce1723f6c797ce8dabd44ef73f2de4f4314";
 
       async function loadAdminNewsletter() {
         const { data, error } = await supa
@@ -7107,7 +7114,9 @@
       }
 
       async function sendNewsletterBlast() {
-        const subject = document.getElementById("newsletterSubject").value.trim();
+        const subject = document
+          .getElementById("newsletterSubject")
+          .value.trim();
         const message = document
           .getElementById("newsletterMessageBody")
           .value.trim();
@@ -7126,13 +7135,16 @@
         statusEl.textContent = "";
 
         try {
-          const { data, error } = await supa.functions.invoke("send-newsletter", {
-            body: {
-              subject,
-              message,
-              adminSecret: ADMIN_FUNCTION_SECRET,
+          const { data, error } = await supa.functions.invoke(
+            "send-newsletter",
+            {
+              body: {
+                subject,
+                message,
+                adminSecret: ADMIN_FUNCTION_SECRET,
+              },
             },
-          });
+          );
           if (error) throw error;
           statusEl.className = "msg-status ok";
           statusEl.textContent = `✅ Sent to ${data.sent} subscriber(s).${
