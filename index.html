@@ -240,7 +240,7 @@
       .logo-box span {
         color: var(--accent);
       }
-      .icon-btn{
+      .icon-btn {
         z-index: 100;
       }
       .logo-image {
@@ -626,17 +626,25 @@
         box-shadow: var(--shadow-md);
         display: flex;
         flex-direction: column;
+
         opacity: 0;
-        transform: translateY(16px) scale(0.98);
+        visibility: hidden;
         pointer-events: none;
-        transition: 0.22s;
+        transform: translateY(16px) scale(0.98);
+
+        transition:
+          opacity 0.22s ease,
+          transform 0.22s ease,
+          visibility 0.22s ease;
         z-index: 250;
         overflow: hidden;
       }
+
       .ai-chat-panel.open {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        visibility: visible;
         pointer-events: auto;
+        transform: translateY(0) scale(1);
       }
       .ai-chat-header {
         display: flex;
@@ -7784,13 +7792,11 @@
               const body = document.getElementById("aBody").value.trim();
               const statusEl = document.getElementById("postAnswerStatus");
               try {
-                const { error } = await supa
-                  .from("answers")
-                  .insert({
-                    question_id: id,
-                    body,
-                    author_name: author_name || "Anonymous",
-                  });
+                const { error } = await supa.from("answers").insert({
+                  question_id: id,
+                  body,
+                  author_name: author_name || "Anonymous",
+                });
                 if (error) throw error;
                 statusEl.className = "msg-status ok";
                 statusEl.textContent = "✅ Answer posted!";
@@ -8454,7 +8460,9 @@
           document.getElementById(typingId)?.remove();
           appendAIChatBubble(
             "assistant",
-            "⚠️ حدث خطأ غير متوقع أثناء البحث في المقالات (" + err.message + ").",
+            "⚠️ حدث خطأ غير متوقع أثناء البحث في المقالات (" +
+              err.message +
+              ").",
           );
         }
       }
