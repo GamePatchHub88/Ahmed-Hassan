@@ -582,6 +582,9 @@ footer{text-align:center; padding:40px 20px; color:var(--text-dim); font-size:14
   border-left:3px solid var(--accent); padding:6px 14px; color:var(--text-dim); margin:10px 0; font-style: italic;
 }
 .editor-area p{margin-bottom:10px}
+.editor-area .lead-paragraph, .post-body .lead-paragraph{
+  font-size:1.2em; font-weight:500; color:var(--text); line-height:1.7;
+}
 .editor-area:empty::before{content:attr(data-placeholder); color:var(--text-dim)}
 .upload-status{font-size:12px; color:var(--accent); padding:4px 8px}
 
@@ -839,18 +842,16 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
 
     <div class="admin-panel active" id="panel-posts">
       <div class="admin-card" style="border-color:var(--accent); background:linear-gradient(135deg, var(--card), var(--bg-soft))">
-        <h3 style="margin-bottom:14px">✨ AI Writing Assistant</h3>
-        <div class="form-grid">
-          <input type="text" id="aiTopicInput" placeholder="Describe the article topic (e.g., 'A beginner's guide to Docker networking')">
-        </div>
+        <h3 style="margin-bottom:8px">🪄 Auto-Format Engine (built-in, no setup)</h3>
+        <p style="font-size:13px; color:var(--text-dim)">
+          Every time you click "Deploy Article", the content is automatically cleaned up and re-formatted before saving:
+          stray text gets wrapped into proper paragraphs, plain links become clickable, empty blocks are removed, and the
+          opening paragraph is styled as a lead-in. No button to click, no API keys, no external service — it just runs.
+        </p>
         <div class="row-actions">
-          <button class="btn" onclick="generateArticleWithAI()" id="aiGenerateBtn">✨ Write Full Article with AI</button>
-          <button class="btn secondary" onclick="autoFetchCoverImage()">🖼️ Auto-Fetch Cover Image</button>
+          <button class="btn secondary" onclick="autoFetchCoverImage()">🖼️ Auto-Fetch Cover Image (free stock photo)</button>
         </div>
         <div class="msg-status" id="aiWriterStatus"></div>
-        <p style="font-size:12px; color:var(--text-dim); margin-top:8px">
-          "Write Full Article" requires the <code>/api/ai-writer</code> backend function to be deployed on your server (see setup notes provided separately). "Auto-Fetch Cover Image" works instantly using free stock photos — no setup needed.
-        </p>
       </div>
       <div class="admin-card">
         <h3 style="margin-bottom:14px" id="postFormTitle">➕ Stage New Post</h3>
@@ -2059,9 +2060,13 @@ async function savePost(){
   const cover_url = document.getElementById('postCover').value.trim();
   const excerpt = document.getElementById('postExcerpt').value.trim();
   const published = document.getElementById('postPublished').checked;
-  const content = document.getElementById('postContent').innerHTML.trim();
+  const rawContent = document.getElementById('postContent').innerHTML.trim();
 
-  if(!title || !content){ alert('Title parameters and deployment content parameters are strictly required.'); return; }
+  if(!title || !rawContent){ alert('Title parameters and deployment content parameters are strictly required.'); return; }
+
+  // Automatically clean up and re-format the content before saving — no button, no setup.
+  const content = autoFormatContent(rawContent);
+  document.getElementById('postContent').innerHTML = content; // reflect the cleaned-up version back in the editor
 
   const payload = {title, section_id, cover_url, excerpt, content, published};
   let error;
@@ -2537,44 +2542,66 @@ async function showQuestion(id){
   }
 }
 
-/* ================== AI WRITING ASSISTANT ================== */
-async function generateArticleWithAI(){
-  const topic = document.getElementById('aiTopicInput').value.trim();
-  const statusEl = document.getElementById('aiWriterStatus');
-  const btn = document.getElementById('aiGenerateBtn');
-  if(!topic){ alert('Type a topic first, e.g. "A beginner\'s guide to Docker networking".'); return; }
+/* ================== BUILT-IN AUTO-FORMAT ENGINE ================== */
+/**
+ * Cleans up and re-formats raw contenteditable HTML before saving.
+ * Pure client-side logic — no external service, no API keys, runs automatically.
+ */
+function autoFormatContent(rawHtml){
+  const container = document.createElement('div');
+  container.innerHTML = rawHtml;
 
-  btn.disabled = true;
-  statusEl.className = 'msg-status';
-  statusEl.textContent = '✨ Generating article... this can take 10-20 seconds.';
+  // 1. Turn any stray <div> wrappers (common contenteditable artifact) into <p>
+  container.querySelectorAll('div').forEach(div => {
+    const p = document.createElement('p');
+    p.innerHTML = div.innerHTML;
+    div.replaceWith(p);
+  });
 
-  try{
-    const res = await fetch('/api/ai-writer', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({topic})
-    });
-    if(!res.ok) throw new Error(`Server returned ${res.status}. Make sure /api/ai-writer is deployed.`);
-    const data = await res.json();
-    if(!data.title || !data.content) throw new Error('AI response was missing title/content.');
+  // 2. Wrap any orphan text/inline nodes that sit directly under the root into <p>
+  Array.from(container.childNodes).forEach(node => {
+    const isTextWithContent = node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0;
+    const isInlineEl = node.nodeType === Node.ELEMENT_NODE && /^(B|STRONG|I|EM|U|A|SPAN|BR)$/.test(node.tagName);
+    if(isTextWithContent || isInlineEl){
+      const p = document.createElement('p');
+      node.replaceWith(p);
+      p.appendChild(node);
+      // Pull in following inline siblings so they don't each get their own <p>
+      while(p.nextSibling && (p.nextSibling.nodeType === Node.TEXT_NODE || /^(B|STRONG|I|EM|U|A|SPAN|BR)$/.test(p.nextSibling.tagName || ''))){
+        p.appendChild(p.nextSibling);
+      }
+    }
+  });
 
-    document.getElementById('postTitle').value = data.title;
-    document.getElementById('postExcerpt').value = data.excerpt || '';
-    document.getElementById('postContent').innerHTML = data.content;
+  // 3. Remove empty / whitespace-only paragraphs and headings
+  container.querySelectorAll('p, h2, h3, blockquote').forEach(el => {
+    if(el.textContent.trim() === '' && el.querySelectorAll('img').length === 0){
+      el.remove();
+    }
+  });
 
-    statusEl.className = 'msg-status ok';
-    statusEl.textContent = '✅ Article generated! Review and edit it before publishing, then click "Auto-Fetch Cover Image".';
-  }catch(err){
-    statusEl.className = 'msg-status err';
-    statusEl.textContent = '❌ ' + err.message + ' — see the setup notes for deploying the AI backend function.';
-    console.error('generateArticleWithAI failed:', err);
-  }
-  btn.disabled = false;
+  // 4. Auto-linkify plain-text URLs that aren't already inside an <a> tag
+  const urlPattern = /(https?:\/\/[^\s<]+)/g;
+  container.querySelectorAll('p, li').forEach(el => {
+    if(el.querySelector('a')) return; // skip blocks that already contain links
+    if(urlPattern.test(el.innerHTML)){
+      el.innerHTML = el.innerHTML.replace(urlPattern, url => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
+    }
+  });
+
+  // 5. Style the very first paragraph as a lead-in for a stronger visual hierarchy
+  const firstP = container.querySelector('p');
+  if(firstP) firstP.classList.add('lead-paragraph');
+
+  // 6. Collapse 3+ consecutive <br> into a single paragraph break
+  container.innerHTML = container.innerHTML.replace(/(<br\s*\/?>\s*){3,}/gi, '<br>');
+
+  return container.innerHTML;
 }
 
 function autoFetchCoverImage(){
-  const title = document.getElementById('postTitle').value.trim() || document.getElementById('aiTopicInput').value.trim();
-  if(!title){ alert('Type an article title or topic first so we know what image to fetch.'); return; }
+  const title = document.getElementById('postTitle').value.trim();
+  if(!title){ alert('Type an article title first so we know what image to fetch.'); return; }
   const keywords = encodeURIComponent(title.split(' ').slice(0, 4).join(','));
   const url = `https://source.unsplash.com/1200x630/?${keywords}`;
   document.getElementById('postCover').value = url;
