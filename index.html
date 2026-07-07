@@ -138,6 +138,10 @@ nav.links a:hover::after, nav.links a.active::after{width:100%}
 .avatar-circle img{width:100%; height:100%; object-fit:cover; display:block;}
 .avatar-card h3{font-size:18px; margin-bottom:4px; font-weight: 700;}
 .avatar-card p{color:var(--text-dim); font-size:14px}
+.avatar-stats{display:flex; justify-content:center; gap:18px; margin-top:16px; padding-top:16px; border-top:1px solid var(--border)}
+.avatar-stat{display:flex; flex-direction:column; align-items:center; gap:2px}
+.avatar-stat b{font-size:15px; font-weight:800; color:var(--text)}
+.avatar-stat span{font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.3px}
 
 /* ===== Animations ===== */
 @keyframes fadeIn{ from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:translateY(0)} }
@@ -301,6 +305,34 @@ main{max-width:1100px; margin:0 auto; padding:20px}
   padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:500; margin-left:8px;
 }
 .bookmark-btn.saved{color:var(--accent); border-color:rgba(239,68,68,0.3)}
+
+/* ===== Share Row ===== */
+.share-row{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:30px; padding-top:20px;
+  border-top:1px solid var(--border);
+}
+.share-label{font-size:13px; font-weight:600; color:var(--text-dim)}
+.share-x:hover{border-color:#000; color:#000}
+html[data-theme="dark"] .share-x:hover{color:#fff; border-color:#fff}
+.share-linkedin:hover{border-color:#0a66c2; color:#0a66c2}
+.share-whatsapp:hover{border-color:#25d366; color:#25d366}
+
+/* ===== Comments ===== */
+.comments-section{margin-top:44px; padding-top:30px; border-top:1px solid var(--border)}
+.comments-head{font-size:19px; font-weight:800; margin-bottom:16px}
+.comment-form{
+  display:flex; flex-direction:column; gap:10px; background:var(--bg-soft); border:1px solid var(--border);
+  border-radius:10px; padding:16px; margin-bottom:20px;
+}
+.comment-form input, .comment-form textarea{
+  background:var(--card); border:1px solid var(--border); color:var(--text);
+  padding:10px 12px; border-radius:8px; font-size:14px; font-family:inherit;
+}
+.comment-form textarea{min-height:90px; resize:vertical}
+.comment-form .btn{align-self:flex-start}
+.comment-list{display:flex; flex-direction:column; gap:12px}
+.comment-card{cursor:default}
+.comment-card:hover{transform:none}
 
 /* ===== Trending Section ===== */
 .trending-section{max-width:1100px; margin:10px auto 0; padding:0 20px}
@@ -544,7 +576,27 @@ main{max-width:1100px; margin:0 auto; padding:20px}
 .msg-status.ok{background:rgba(34,197,94,.1); color:#16a34a; display:block}
 .msg-status.err{background:rgba(239,68,68,.1); color:#dc2626; display:block}
 
-footer{text-align:center; padding:40px 20px; color:var(--text-dim); font-size:14px; border-top:1px solid var(--border); margin-top:60px}
+.site-footer{margin-top:60px; border-top:1px solid var(--border); background:var(--bg-soft)}
+.footer-grid{
+  max-width:1100px; margin:0 auto; padding:48px 20px 30px;
+  display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:32px;
+}
+.footer-brand p{color:var(--text-dim); font-size:14px; margin:12px 0 16px; max-width:320px; line-height:1.6}
+.footer-social{display:flex; gap:10px}
+.footer-social a{
+  width:34px; height:34px; border-radius:8px; background:var(--card); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:var(--text); transition:.2s;
+}
+.footer-social a:hover{border-color:var(--accent); color:var(--accent)}
+.footer-col h4{font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-dim); font-weight:700; margin-bottom:14px}
+.footer-col{display:flex; flex-direction:column; gap:10px}
+.footer-col a{color:var(--text); font-size:14px; font-weight:500; transition:.15s; cursor:pointer}
+.footer-col a:hover{color:var(--accent)}
+.footer-bottom{
+  text-align:center; padding:18px 20px; color:var(--text-dim); font-size:13px;
+  border-top:1px solid var(--border);
+}
+@media (max-width:700px){ .footer-grid{grid-template-columns:1fr 1fr; gap:26px} }
 
 /* ===== Newsletter ===== */
 .newsletter-section{
@@ -705,6 +757,11 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
         <div class="avatar-circle" id="avatarCircle"><span id="avatarCircleText">Ah</span></div>
         <h3>Ah Stack Engine</h3>
         <p>Curated by Ahmed Hassan</p>
+        <div class="avatar-stats">
+          <div class="avatar-stat"><b id="heroArticleCount">0</b><span>Articles</span></div>
+          <div class="avatar-stat"><b>Est. 2024</b><span>Since</span></div>
+          <div class="avatar-stat"><b>🌙/☀️</b><span>Themes</span></div>
+        </div>
       </div>
     </section>
 
@@ -713,6 +770,11 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
         <span class="icon">🔍</span>
         <input type="text" id="searchInput" placeholder="Search articles by titles, keywords, or tags..." oninput="handleSearch(this.value)">
       </div>
+    </div>
+
+    <div class="trending-section" id="trendingSection" style="display:none">
+      <h2>🔥 Trending Now</h2>
+      <div class="trending-scroll" id="trendingScroll"></div>
     </div>
 
     <div class="section-filter" id="sectionFilter">
@@ -875,8 +937,38 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
     <div class="msg-status" id="newsletterStatus"></div>
   </div>
 
-  <footer>
-    © 2026 Ah Stack — Built for scaling builders. All rights reserved.
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo-box" style="display:inline-flex; margin-bottom:10px">Ah<span>_Stack</span></div>
+        <p>A technical platform for architectural concepts, code practicalities, and roadmap guidelines — for engineers who build to scale.</p>
+        <div class="footer-social">
+          <a href="#" title="X / Twitter">𝕏</a>
+          <a href="#" title="GitHub">🐙</a>
+          <a href="#" title="LinkedIn">in</a>
+          <a href="#" title="RSS">📡</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Content</h4>
+        <a href="#/" onclick="location.hash='#/'">Articles</a>
+        <a href="#/roadmaps" onclick="location.hash='#/roadmaps'">Roadmaps</a>
+        <a href="#/courses" onclick="location.hash='#/courses'">Courses</a>
+        <a href="#/questions" onclick="location.hash='#/questions'">Questions</a>
+      </div>
+      <div class="footer-col">
+        <h4>Community</h4>
+        <a href="#/progress" onclick="location.hash='#/progress'">🏆 Leaderboard & Points</a>
+        <a href="#/questions" onclick="location.hash='#/questions'">💬 Ask a Question</a>
+        <a href="#" onclick="document.getElementById('newsletterEmail').focus()">📬 Subscribe</a>
+      </div>
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <a href="#/contact" onclick="location.hash='#/contact'">Contact Us</a>
+        <a href="#" onclick="openAdminModal()">Admin Login</a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 Ah Stack — Built for scaling builders. All rights reserved.</div>
   </footer>
 </div>
 
@@ -917,6 +1009,7 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
       <div class="admin-tab" data-tab="courses" onclick="switchAdminTab('courses')">🎓 Courses</div>
       <div class="admin-tab" data-tab="roadmaps" onclick="switchAdminTab('roadmaps')">🗺️ Roadmaps</div>
       <div class="admin-tab" data-tab="questions" onclick="switchAdminTab('questions')">💬 Community Q&A</div>
+      <div class="admin-tab" data-tab="comments" onclick="switchAdminTab('comments')">🗨️ Comments</div>
       <div class="admin-tab" data-tab="leaderboard" onclick="switchAdminTab('leaderboard')">🏆 Leaderboard</div>
       <div class="admin-tab" data-tab="messages" onclick="switchAdminTab('messages')">✉️ Inbound Transmissions</div>
       <div class="admin-tab" data-tab="settings" onclick="switchAdminTab('settings')">🔑 Configuration Token</div>
@@ -1111,6 +1204,16 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
       </div>
     </div>
 
+    <div class="admin-panel" id="panel-comments">
+      <div class="admin-card">
+        <h3 style="margin-bottom:14px">🗨️ Article Comments</h3>
+        <table>
+          <thead><tr><th>Comment</th><th>Author</th><th>Article</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="adminCommentsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="admin-panel" id="panel-leaderboard">
       <div class="admin-card">
         <h3 style="margin-bottom:14px">🏆 Visitor Leaderboard</h3>
@@ -1214,6 +1317,9 @@ async function loadPosts(){
   if(error){ console.error(error); return; }
   postsCache = data || [];
   renderPostsGrid('all');
+  renderTrending();
+  const countEl = document.getElementById('heroArticleCount');
+  if(countEl) countEl.textContent = postsCache.length;
 }
 
 function renderSectionFilter(){
@@ -1299,13 +1405,34 @@ async function showPost(id){
     <div class="meta">
       <span style="color:var(--accent); font-weight:600">${sec ? esc(sec.name) : 'General'}</span> · ${fmtDate(p.created_at)}
       · 📖 ${readMins} min read · 👁️ <span id="postViewCount">${p.views || 0}</span> views
-      <button class="icon-btn" id="shareBtn" style="margin-left:10px; font-size:12px" onclick="sharePost('${p.id}')">🔗 Copy Link</button>
     </div>
     <div class="post-content">${p.content}</div>
+    <div class="share-row">
+      <span class="share-label">📢 Share this article:</span>
+      <button class="icon-btn share-x" onclick="shareTo('x','${p.id}','${esc(p.title).replace(/'/g,"\\'")}')">𝕏 X</button>
+      <button class="icon-btn share-linkedin" onclick="shareTo('linkedin','${p.id}','${esc(p.title).replace(/'/g,"\\'")}')">in LinkedIn</button>
+      <button class="icon-btn share-whatsapp" onclick="shareTo('whatsapp','${p.id}','${esc(p.title).replace(/'/g,"\\'")}')">📱 WhatsApp</button>
+      <button class="icon-btn" id="shareBtn" onclick="sharePost('${p.id}')">🔗 Copy Link</button>
+    </div>
     <div id="relatedArticles"></div>
+    <div class="comments-section" id="commentsSection">
+      <h3 class="comments-head">💬 Discussion (<span id="commentsCount">0</span>)</h3>
+      <form class="comment-form" id="commentForm">
+        <div class="row" style="display:flex; gap:10px; flex-wrap:wrap">
+          <input type="text" id="commentAuthor" placeholder="Your name (optional)" style="flex:1; min-width:160px">
+          <input type="email" id="commentEmail" placeholder="Email (optional, not shown)" style="flex:1; min-width:160px">
+        </div>
+        <textarea id="commentBody" placeholder="Share your thoughts on this article..." required></textarea>
+        <button type="submit" class="btn">Post Comment</button>
+        <div class="msg-status" id="commentStatus"></div>
+      </form>
+      <div class="comment-list" id="commentList"></div>
+    </div>
   `;
   bumpPostViews(p.id, p.views || 0);
   renderRelatedArticles(p, sec);
+  document.getElementById('commentForm').addEventListener('submit', (e) => { e.preventDefault(); submitComment(p.id); });
+  loadComments(p.id);
 }
 
 async function bumpPostViews(id, currentViews){
@@ -1346,6 +1473,82 @@ function renderRelatedArticles(p, sec){
     </div>
   `;
   markReveal(wrap);
+}
+
+function shareTo(platform, id, title){
+  const url = `${location.origin}${location.pathname}#/post/${id}`;
+  const text = encodeURIComponent(title || '');
+  const encodedUrl = encodeURIComponent(url);
+  let target = '';
+  if(platform === 'x') target = `https://twitter.com/intent/tweet?text=${text}&url=${encodedUrl}`;
+  else if(platform === 'linkedin') target = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+  else if(platform === 'whatsapp') target = `https://wa.me/?text=${text}%20${encodedUrl}`;
+  if(target) window.open(target, '_blank', 'noopener,noreferrer');
+}
+
+/* ================== ARTICLE COMMENTS ================== */
+async function loadComments(postId){
+  const listEl = document.getElementById('commentList');
+  const countEl = document.getElementById('commentsCount');
+  if(!listEl) return;
+  listEl.innerHTML = `<div class="empty-state" style="padding:24px">Loading comments...</div>`;
+  try{
+    const {data, error} = await supa.from('comments').select('*').eq('post_id', postId).order('created_at', {ascending:false});
+    if(error) throw error;
+    const comments = data || [];
+    if(countEl) countEl.textContent = comments.length;
+    if(comments.length === 0){
+      listEl.innerHTML = `<div class="empty-state" style="padding:24px">Be the first to comment on this article.</div>`;
+      return;
+    }
+    listEl.innerHTML = comments.map(c => `
+      <div class="answer-card comment-card">
+        <div class="body">${esc(c.body)}</div>
+        <div class="meta">💬 ${esc(c.author_name || 'Anonymous')} · ${fmtDate(c.created_at)}</div>
+      </div>
+    `).join('');
+  }catch(err){
+    listEl.innerHTML = `<div class="empty-state" style="padding:24px">Comments are unavailable right now. (Make sure a "comments" table exists in Supabase with columns: post_id, author_name, email, body, created_at)</div>`;
+    if(countEl) countEl.textContent = '0';
+  }
+}
+
+async function submitComment(postId){
+  const author_name = document.getElementById('commentAuthor').value.trim();
+  const email = document.getElementById('commentEmail').value.trim();
+  const body = document.getElementById('commentBody').value.trim();
+  const statusEl = document.getElementById('commentStatus');
+  if(!body){ return; }
+  try{
+    const {error} = await supa.from('comments').insert({post_id: postId, author_name: author_name || 'Anonymous', email: email || null, body});
+    if(error) throw error;
+    statusEl.className = 'msg-status ok';
+    statusEl.textContent = '✅ Comment posted!';
+    document.getElementById('commentBody').value = '';
+    gmAward('comment');
+    loadComments(postId);
+    setTimeout(() => { statusEl.textContent=''; statusEl.className='msg-status'; }, 4000);
+  }catch(err){
+    statusEl.className = 'msg-status err';
+    statusEl.textContent = '❌ Could not post comment: ' + err.message;
+  }
+}
+
+/* ================== TRENDING NOW (HOME) ================== */
+function renderTrending(){
+  const wrap = document.getElementById('trendingSection');
+  const scroll = document.getElementById('trendingScroll');
+  if(!wrap || !scroll) return;
+  const top = [...postsCache].sort((a,b) => (b.views||0) - (a.views||0)).slice(0, 8);
+  if(top.length < 3){ wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  scroll.innerHTML = top.map((p, idx) => `
+    <div class="trending-card" onclick="location.hash='#/post/${p.id}'">
+      <div class="rank">#${idx+1} TRENDING</div>
+      <div class="t">${esc(p.title)}</div>
+      <div class="v">👁️ ${p.views || 0} views</div>
+    </div>
+  `).join('');
 }
 
 /* ================== ROUTING ROUTINES ================== */
@@ -1574,6 +1777,7 @@ async function loadAdminData(){
   await loadAdminSections();
   await loadAdminMessages();
   await loadAdminQuestions();
+  await loadAdminComments();
   await loadAdminRoadmaps();
   await loadAdminCourses();
   await loadAdminLeaderboard();
@@ -2212,6 +2416,36 @@ async function deleteSection(id){
   await loadAdminSections();
 }
 
+/* ---- ARTICLE COMMENTS MODERATION ---- */
+async function loadAdminComments(){
+  const tbody = document.getElementById('adminCommentsTableBody');
+  if(!tbody) return;
+  try{
+    const {data, error} = await supa.from('comments').select('*').order('created_at', {ascending:false});
+    if(error) throw error;
+    const rows = data || [];
+    tbody.innerHTML = rows.map(c => {
+      const post = postsCache.find(p => p.id === c.post_id);
+      return `
+      <tr>
+        <td style="max-width:320px; white-space:normal; font-size:13px">${esc(c.body)}</td>
+        <td style="font-weight:600">${esc(c.author_name || 'Anonymous')}</td>
+        <td style="font-size:13px">${post ? esc(post.title) : c.post_id}</td>
+        <td style="font-size:12px; color:var(--text-dim)">${fmtDate(c.created_at)}</td>
+        <td><button class="icon-btn danger" onclick="deleteCommentAdmin('${c.id}')">🗑️</button></td>
+      </tr>
+    `}).join('') || `<tr><td colspan="5">No comments yet.</td></tr>`;
+  }catch(err){
+    tbody.innerHTML = `<tr><td colspan="5">Could not load — make sure the "comments" table exists in Supabase (columns: post_id, author_name, email, body, created_at).</td></tr>`;
+  }
+}
+
+async function deleteCommentAdmin(id){
+  if(!confirm('Delete this comment permanently?')) return;
+  await supa.from('comments').delete().eq('id', id);
+  await loadAdminComments();
+}
+
 /* ---- INBOUND MESSAGES FLOW ---- */
 async function loadAdminMessages(){
   const {data, error} = await supa.from('messages').select('*').order('created_at', {ascending:false});
@@ -2498,7 +2732,7 @@ function handleStepToggle(roadmapId, stepId){
 /* ================== GAMIFICATION: POINTS & BADGES ================== */
 const GM_KEY = 'gm_profile_v1';
 const GM_DEVICE_KEY = 'gm_device_id_v1';
-const GM_POINTS = {step: 5, lesson: 10, question: 5, answer: 8};
+const GM_POINTS = {step: 5, lesson: 10, question: 5, answer: 8, comment: 4};
 
 const GM_BADGES = [
   {id:'first_step', icon:'🚀', name:'First Steps', desc:'Complete your first roadmap step', check: s => s.stepsCompleted >= 1},
@@ -2507,6 +2741,7 @@ const GM_BADGES = [
   {id:'course_graduate', icon:'🎓', name:'Course Graduate', desc:'Finish 20 lessons', check: s => s.lessonsCompleted >= 20},
   {id:'curious_mind', icon:'💬', name:'Curious Mind', desc:'Ask 3 questions', check: s => s.questionsAsked >= 3},
   {id:'helper', icon:'🤝', name:'Helper', desc:'Post 5 answers', check: s => s.answersPosted >= 5},
+  {id:'voice_of_community', icon:'📝', name:'Voice of the Community', desc:'Post 5 comments on articles', check: s => (s.commentsPosted||0) >= 5},
   {id:'club_100', icon:'🔥', name:'100 Club', desc:'Reach 100 points', check: s => s.points >= 100},
   {id:'club_500', icon:'💯', name:'500 Club', desc:'Reach 500 points', check: s => s.points >= 500},
 ];
@@ -2525,7 +2760,7 @@ function gmGetProfile(){
     const raw = JSON.parse(localStorage.getItem(GM_KEY) || 'null');
     if(raw) return raw;
   }catch(e){ /* fall through to default */ }
-  return {points:0, badges:[], displayName:'', stepsCompleted:0, lessonsCompleted:0, questionsAsked:0, answersPosted:0};
+  return {points:0, badges:[], displayName:'', stepsCompleted:0, lessonsCompleted:0, questionsAsked:0, answersPosted:0, commentsPosted:0};
 }
 
 function gmSaveProfile(profile){
@@ -2557,6 +2792,7 @@ function gmAward(action){
   if(action === 'lesson') profile.lessonsCompleted++;
   if(action === 'question') profile.questionsAsked++;
   if(action === 'answer') profile.answersPosted++;
+  if(action === 'comment') profile.commentsPosted = (profile.commentsPosted||0) + 1;
 
   const newlyUnlocked = [];
   GM_BADGES.forEach(b => {
