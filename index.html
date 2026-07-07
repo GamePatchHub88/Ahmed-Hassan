@@ -2951,17 +2951,23 @@ async function savePost(){
 
   const payload = {title, section_id, cover_url, excerpt, content, published};
   const payloadFull = {...payload, tags, featured_style};
-  let error;
+  let error, usedFeaturedStyle = true, usedTags = true;
   if(id){
     ({error} = await supa.from('posts').update(payloadFull).eq('id', id));
-    if(error) ({error} = await supa.from('posts').update({...payload, tags}).eq('id', id));
-    if(error) ({error} = await supa.from('posts').update(payload).eq('id', id));
+    if(error){ usedFeaturedStyle = false; ({error} = await supa.from('posts').update({...payload, tags}).eq('id', id)); }
+    if(error){ usedTags = false; ({error} = await supa.from('posts').update(payload).eq('id', id)); }
   } else {
     ({error} = await supa.from('posts').insert(payloadFull));
-    if(error) ({error} = await supa.from('posts').insert({...payload, tags}));
-    if(error) ({error} = await supa.from('posts').insert(payload));
+    if(error){ usedFeaturedStyle = false; ({error} = await supa.from('posts').insert({...payload, tags})); }
+    if(error){ usedTags = false; ({error} = await supa.from('posts').insert(payload)); }
   }
   if(error){ toast('Fault event failure logic: ' + error.message); return; }
+  if(featured_style && !usedFeaturedStyle){
+    toast('⚠️ Saved, but "Featured Style" needs a column first. Run this once in Supabase SQL editor: ALTER TABLE posts ADD COLUMN featured_style boolean DEFAULT false;', 'err');
+  }
+  if(tags.length && !usedTags){
+    toast('⚠️ Saved, but "tags" column is missing on the posts table.', 'err');
+  }
   resetPostForm();
   await loadAdminPosts();
 }
@@ -3841,27 +3847,18 @@ function toast(message, type){
 }
 
 /* ================== OFFLINE / ONLINE DETECTION ================== */
-// Running the site directly from file:// (double-clicking the .html file) makes fetch() to any
-// remote URL fail due to the browser's own file:// security sandboxing — that failure is NOT a
-// real connectivity problem, so on file:// we simply trust the browser's online/offline events
-// and skip the network probe entirely to avoid false "you're offline" warnings.
-const IS_FILE_PROTOCOL = location.protocol === 'file:';
-function updateOnlineStatus(){
+// navigator.onLine can read incorrectly for a moment right at page load in some browsers/hosting
+// setups, and fetch()-based probes fail on file:// for unrelated security reasons — neither is a
+// reliable one-shot "am I online" check. So instead of checking once on load, we ONLY react to the
+// browser's own genuine connectivity transition events (which are accurate), and the banner starts
+// hidden. This means real Supabase errors during use still surface via toast messages either way.
+function updateOnlineStatus(isOnlineEvent){
   const banner = document.getElementById('offlineBanner');
   if(!banner) return;
-  if(IS_FILE_PROTOCOL){
-    // Supabase read/write calls will reveal a real connectivity problem on their own (via toast
-    // error messages), so we don't show a standalone banner in this mode.
-    banner.classList.remove('show');
-    return;
-  }
-  banner.classList.toggle('show', navigator.onLine === false);
+  banner.classList.toggle('show', isOnlineEvent === false);
 }
-window.addEventListener('online', () => { updateOnlineStatus(); toast('Back online ✅', 'ok'); });
-window.addEventListener('offline', () => {
-  updateOnlineStatus();
-  if(!IS_FILE_PROTOCOL) toast('You are offline — some actions are disabled.', 'err');
-});
+window.addEventListener('online', () => { updateOnlineStatus(true); toast('Back online ✅', 'ok'); });
+window.addEventListener('offline', () => { updateOnlineStatus(false); toast('You are offline — some actions are disabled.', 'err'); });
 
 /* ================== COMMAND PALETTE (Ctrl+K / "/") ================== */
 function openCmdk(){
@@ -3934,7 +3931,6 @@ function restorePostLikeState(postId){
 
 /* ================== INITIATE RUNTIME PIPELINE ================== */
 (async function init(){
-  updateOnlineStatus();
   await loadSiteBranding();
   await loadSections();
   await loadPosts();
