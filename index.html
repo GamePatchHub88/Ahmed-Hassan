@@ -240,6 +240,66 @@ nav.links a:hover::after, nav.links a.active::after{width:100%}
 .scroll-top-btn.show{opacity:1; pointer-events:auto;}
 .scroll-top-btn:hover{background: var(--accent);}
 
+/* ===== Series / Collections ===== */
+.series-box{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px; box-shadow:var(--shadow);
+}
+.series-item{
+  display:flex; align-items:center; gap:12px; padding:10px 8px; border-radius:8px; cursor:pointer; transition:.15s;
+}
+.series-item:hover{background:var(--bg-soft)}
+.series-item.current{background:rgba(var(--accent-rgb),0.08); border:1px solid var(--accent)}
+.series-item.read .series-item-title{color:var(--text-dim)}
+.series-num{
+  width:28px; height:28px; flex-shrink:0; border-radius:50%; background:var(--bg-soft); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:var(--accent);
+}
+.series-item-title{font-weight:600; font-size:14px}
+.series-item-meta{font-size:12px; color:var(--text-dim)}
+
+/* ===== AI Summary Box ===== */
+.ai-summary-box{margin:18px 0}
+.ai-summary-box .btn.secondary{
+  background:var(--bg-soft); border:1px solid var(--border); color:var(--text);
+  padding:10px 16px; border-radius:8px; font-size:14px; cursor:pointer;
+}
+.ai-summary-label{font-size:12px; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px}
+.ai-summary-text{
+  background:linear-gradient(135deg, rgba(var(--accent-rgb),0.06), rgba(var(--accent-rgb),0.02));
+  border:1px solid rgba(var(--accent-rgb),0.25); border-radius:10px; padding:14px 16px; font-size:15px; line-height:1.7;
+}
+
+/* ===== AI Chat Widget ===== */
+.ai-chat-fab{
+  position:fixed; bottom:28px; left:82px; width:52px; height:52px; border-radius:50%;
+  background:var(--accent); color:#fff; border:none; font-size:22px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-md); z-index:250;
+  transition:.2s;
+}
+.ai-chat-fab:hover{transform:scale(1.06)}
+.ai-chat-panel{
+  position:fixed; bottom:90px; left:28px; width:340px; max-width:calc(100vw - 40px); height:440px; max-height:60vh;
+  background:var(--card-solid); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow-md);
+  display:flex; flex-direction:column; opacity:0; transform:translateY(16px) scale(.98); pointer-events:none;
+  transition:.22s; z-index:250; overflow:hidden;
+}
+.ai-chat-panel.open{opacity:1; transform:translateY(0) scale(1); pointer-events:auto;}
+.ai-chat-header{
+  display:flex; align-items:center; justify-content:space-between; padding:14px 16px;
+  border-bottom:1px solid var(--border); font-weight:800; font-size:14px;
+}
+.ai-chat-messages{flex:1; overflow-y:auto; padding:12px 14px; display:flex; flex-direction:column; gap:10px}
+.ai-chat-bubble{max-width:85%; padding:9px 13px; border-radius:12px; font-size:13.5px; line-height:1.5}
+.ai-chat-bubble.user{align-self:flex-end; background:var(--accent); color:#fff; border-bottom-right-radius:2px}
+.ai-chat-bubble.assistant{align-self:flex-start; background:var(--bg-soft); border:1px solid var(--border); border-bottom-left-radius:2px}
+.ai-chat-input-row{display:flex; gap:8px; padding:12px; border-top:1px solid var(--border)}
+.ai-chat-input-row input{
+  flex:1; padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:var(--bg-soft); color:var(--text); font-size:13.5px;
+}
+.ai-chat-input-row .btn{padding:10px 16px; border-radius:8px}
+@media (max-width:640px){ .ai-chat-fab{left:20px; bottom:20px} .ai-chat-panel{left:12px; bottom:82px} }
+
 /* ===== Toast notifications (2026 refresh: replaces alert()) ===== */
 .toast-stack{
   position:fixed; bottom:28px; left:28px; z-index:300;
@@ -982,6 +1042,7 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
         <span id="dynamicNavLinks"></span>
         <a href="#/roadmaps" class="nav-link" data-view="roadmaps">Roadmaps</a>
         <a href="#/courses" class="nav-link" data-view="courses">Courses</a>
+        <a href="#/series" class="nav-link" data-view="series">📚 Series</a>
         <a href="#/questions" class="nav-link" data-view="questions">Questions</a>
         <a href="#/progress" class="nav-link" data-view="progress">🏆 <span id="navPointsCount">0</span> pts</a>
         <a href="#/saved" class="nav-link" data-view="saved">🔖 Saved<span class="saved-count-dot" id="savedCountDot" style="display:none">0</span></a>
@@ -992,6 +1053,20 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
   </header>
 
   <button class="scroll-top-btn" id="scrollTopBtn" title="Back to top" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
+
+  <button class="ai-chat-fab" id="aiChatFab" onclick="toggleAIChat()" title="اسأل المدونة بالذكاء الاصطناعي">🤖</button>
+  <div class="ai-chat-panel" id="aiChatPanel">
+    <div class="ai-chat-header">
+      <span>🤖 اسأل المدونة</span>
+      <button class="icon-btn" onclick="toggleAIChat()">✕</button>
+    </div>
+    <div class="ai-chat-messages" id="aiChatMessages"></div>
+    <div class="ai-chat-input-row">
+      <input type="text" id="aiChatInput" placeholder="اكتب سؤالك هنا..." onkeydown="if(event.key==='Enter') sendAIChatMessage()">
+      <button class="btn" onclick="sendAIChatMessage()">➤</button>
+    </div>
+  </div>
+
   <div class="toast-stack" id="toastStack" aria-live="polite"></div>
   <div class="cmdk-overlay" id="cmdkOverlay" onclick="if(event.target===this) closeCmdk()">
     <div class="cmdk-panel">
@@ -1108,6 +1183,27 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
   <div id="view-roadmap" style="display:none">
     <span class="back-btn" style="max-width:800px; margin:20px auto 0; display:block; padding:0 20px" onclick="location.hash='#/roadmaps'">← Back to Roadmaps</span>
     <div id="roadmapDetail"></div>
+  </div>
+
+  <div id="view-series" style="display:none">
+    <div class="section-banner">
+      <div class="crumb"><a onclick="location.hash='#/'">Home</a> <span>→</span> <span>Series</span></div>
+      <div class="section-hero">
+        <div class="icon">📚</div>
+        <div>
+          <h1>Series & Collections</h1>
+          <p>مقالات مترابطة مرتبة كسلسلة متكاملة، اقرأها بالترتيب لتحصل على أقصى استفادة.</p>
+        </div>
+      </div>
+    </div>
+    <div class="rm-grid" id="seriesGrid">
+      <div class="empty-state">Loading series...</div>
+    </div>
+  </div>
+
+  <div id="view-series-detail" style="display:none">
+    <span class="back-btn" style="max-width:1100px; margin:20px auto 0; display:block; padding:0 20px" onclick="location.hash='#/series'">← Back to Series</span>
+    <div id="seriesDetail" style="max-width:1100px; margin:0 auto; padding:20px"></div>
   </div>
 
   <div id="view-progress" style="display:none">
@@ -1281,6 +1377,7 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
     <div class="admin-tabs">
       <div class="admin-tab active" data-tab="posts" onclick="switchAdminTab('posts')">📝 Articles</div>
       <div class="admin-tab" data-tab="sections" onclick="switchAdminTab('sections')">🗂️ Ecosystems</div>
+      <div class="admin-tab" data-tab="series" onclick="switchAdminTab('series')">📚 Series</div>
       <div class="admin-tab" data-tab="courses" onclick="switchAdminTab('courses')">🎓 Courses</div>
       <div class="admin-tab" data-tab="roadmaps" onclick="switchAdminTab('roadmaps')">🗺️ Roadmaps</div>
       <div class="admin-tab" data-tab="questions" onclick="switchAdminTab('questions')">💬 Community Q&A</div>
@@ -1302,6 +1399,10 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
             <button type="button" class="icon-btn" onclick="autoFetchCoverImage()">🖼️ Free Stock Cover Photo</button>
           </div>
           <select id="postSection"></select>
+          <div style="display:flex; gap:10px; align-items:center">
+            <select id="postSeries" style="flex:1"></select>
+            <input type="number" id="postSeriesOrder" placeholder="ترتيب الجزء" value="0" style="width:110px" title="ترتيب المقال داخل السلسلة">
+          </div>
           <div style="display:flex; gap:10px; align-items:center">
             <input type="text" id="postCover" placeholder="Cover Image URL asset (Optional)" style="flex:1">
             <button type="button" class="icon-btn" onclick="document.getElementById('coverUploadInput').click()">📤 Upload Cover</button>
@@ -1374,6 +1475,29 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
         <table>
           <thead><tr><th>Ecosystem Name</th><th>URL Slug Routing</th><th>Actions</th></tr></thead>
           <tbody id="sectionsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="admin-panel" id="panel-series">
+      <div class="admin-card">
+        <h3 style="margin-bottom:14px">➕ إنشاء سلسلة/كولكشن جديد</h3>
+        <input type="hidden" id="seriesId">
+        <div class="form-grid" style="grid-template-columns:1fr 1fr; display:grid">
+          <input type="text" id="seriesName" placeholder="اسم السلسلة (مثال: تعلم React من الصفر)">
+          <input type="text" id="seriesCover" placeholder="رابط صورة الغلاف (اختياري)">
+        </div>
+        <div class="form-grid" style="margin-top:-14px">
+          <textarea id="seriesDescription" placeholder="وصف مختصر للسلسلة" style="min-height:70px"></textarea>
+        </div>
+        <button class="btn" onclick="saveSeries()">💾 حفظ السلسلة</button>
+        <button class="btn secondary" onclick="resetSeriesForm()">إلغاء</button>
+      </div>
+      <div class="admin-card">
+        <h3 style="margin-bottom:14px">السلاسل الحالية</h3>
+        <table>
+          <thead><tr><th>الاسم</th><th>عدد المقالات</th><th>Actions</th></tr></thead>
+          <tbody id="seriesTableBody"></tbody>
         </table>
       </div>
     </div>
@@ -1550,6 +1674,7 @@ const supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let ADMIN_TRIGGER = "123456789";
 let sectionsCache = [];
+let seriesCache = [];
 let postsCache = [];
 let currentSearchQuery = "";
 
@@ -1590,6 +1715,97 @@ async function loadSections(){
   renderSectionFilter();
   renderNavSections();
   fillSectionSelect();
+}
+
+/* ================== SERIES / COLLECTIONS ================== */
+async function loadSeries(){
+  const {data, error} = await supa.from('series').select('*').order('created_at', {ascending:false});
+  if(error){ console.error(error); return; }
+  seriesCache = data || [];
+  fillSeriesSelect();
+}
+
+function fillSeriesSelect(){
+  const sel = document.getElementById('postSeries');
+  if(!sel) return;
+  sel.innerHTML = `<option value="">لا ينتمي لأي سلسلة</option>` +
+    seriesCache.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+}
+
+async function renderSeriesGrid(){
+  const grid = document.getElementById('seriesGrid');
+  if(!seriesCache.length) await loadSeries();
+  if(!seriesCache.length){
+    grid.innerHTML = `<div class="empty-state">لا توجد سلاسل بعد.</div>`;
+    return;
+  }
+  grid.innerHTML = seriesCache.map(s => {
+    const partsCount = postsCache.filter(p => p.series_id === s.id).length;
+    return `
+    <div class="rm-card" onclick="location.hash='#/series/${s.id}'">
+      ${s.cover_url ? `<img src="${esc(s.cover_url)}" style="width:100%; height:120px; object-fit:cover; border-radius:8px; margin-bottom:10px">` : ''}
+      <h3 style="font-size:17px; font-weight:800; margin-bottom:6px">📚 ${esc(s.name)}</h3>
+      <p style="color:var(--text-dim); font-size:13px; margin-bottom:10px">${esc(s.description || '')}</p>
+      <span style="font-size:12px; font-weight:700; color:var(--accent)">${partsCount} ${partsCount === 1 ? 'مقال' : 'مقالات'}</span>
+    </div>`;
+  }).join('');
+}
+
+async function renderSeriesDetail(id){
+  const el = document.getElementById('seriesDetail');
+  if(!seriesCache.length) await loadSeries();
+  const s = seriesCache.find(x => x.id === id);
+  if(!s){ el.innerHTML = `<div class="empty-state">السلسلة غير موجودة.</div>`; return; }
+  const parts = postsCache.filter(p => p.series_id === id).sort((a,b) => (a.series_order||0) - (b.series_order||0));
+  const readSet = new Set(getReadPosts());
+  el.innerHTML = `
+    <h1 style="margin-bottom:8px">📚 ${esc(s.name)}</h1>
+    <p style="color:var(--text-dim); margin-bottom:24px">${esc(s.description || '')}</p>
+    <div class="series-box">
+      ${parts.map((p, idx) => `
+        <div class="series-item ${readSet.has(p.id) ? 'read' : ''}" onclick="location.hash='#/post/${p.id}'">
+          <span class="series-num">${readSet.has(p.id) ? '✅' : (idx + 1)}</span>
+          <div>
+            <div class="series-item-title">${esc(p.title)}</div>
+            <div class="series-item-meta">${fmtDate(p.created_at)}</div>
+          </div>
+        </div>
+      `).join('') || `<div class="empty-state">لا توجد مقالات في هذه السلسلة بعد.</div>`}
+    </div>
+  `;
+}
+
+/* Track which posts the reader has opened, purely on-device, to show progress in series */
+const READ_POSTS_KEY = 'read_posts_v1';
+function getReadPosts(){
+  try{ return JSON.parse(localStorage.getItem(READ_POSTS_KEY) || '[]'); }catch(e){ return []; }
+}
+function markPostRead(postId){
+  const list = getReadPosts();
+  if(!list.includes(postId)){ list.push(postId); localStorage.setItem(READ_POSTS_KEY, JSON.stringify(list)); }
+}
+
+function renderSeriesBoxInPost(p){
+  if(!p.series_id) return '';
+  const s = seriesCache.find(x => x.id === p.series_id);
+  if(!s) return '';
+  const parts = postsCache.filter(x => x.series_id === p.series_id).sort((a,b) => (a.series_order||0) - (b.series_order||0));
+  const readSet = new Set(getReadPosts());
+  const currentIdx = parts.findIndex(x => x.id === p.id);
+  return `
+    <div class="series-box" style="margin:20px 0">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+        <strong>📚 سلسلة: ${esc(s.name)}</strong>
+        <span style="font-size:12px; color:var(--text-dim)">جزء ${currentIdx + 1} من ${parts.length}</span>
+      </div>
+      ${parts.map((x, idx) => `
+        <div class="series-item ${x.id === p.id ? 'current' : ''} ${readSet.has(x.id) ? 'read' : ''}" onclick="location.hash='#/post/${x.id}'">
+          <span class="series-num">${x.id === p.id ? '📍' : (readSet.has(x.id) ? '✅' : (idx + 1))}</span>
+          <div class="series-item-title">${esc(x.title)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
 async function loadPosts(){
@@ -1698,6 +1914,11 @@ async function showPost(id){
       <button class="icon-btn" id="focusModeBtn" onclick="toggleFocusMode()" style="margin-left:8px">🧘 Focus Mode</button>
     </div>
     ${tags.length ? `<div class="tag-chips">${tags.map(t => `<span class="tag-chip" onclick="filterByTag('${esc(t).replace(/'/g,"\\'")}')">#${esc(t)}</span>`).join('')}</div>` : ''}
+    ${renderSeriesBoxInPost(p)}
+    <div class="ai-summary-box" id="aiSummaryBox">
+      ${p.ai_summary ? `<div class="ai-summary-label">✨ ملخص بالذكاء الاصطناعي</div><div class="ai-summary-text">${esc(p.ai_summary)}</div>`
+        : `<button class="btn secondary" id="aiSummarizeBtn" onclick="generateAISummary('${p.id}')">✨ لخّص المقال بالذكاء الاصطناعي</button>`}
+    </div>
     <div id="tocBox"></div>
     <div class="post-content ${p.featured_style ? 'featured-style' : ''}" id="postContentBody" dir="auto">${p.content}</div>
     <div class="helpful-box">
@@ -1744,6 +1965,8 @@ async function showPost(id){
   initReadingProgress();
   restoreHelpfulVoteState(p.id);
   restorePostLikeState(p.id);
+  markPostRead(p.id);
+  subscribeToPostComments(p.id);
   _listenState = 'stopped';
   if('speechSynthesis' in window) window.speechSynthesis.cancel();
 }
@@ -1958,6 +2181,8 @@ function router(){
   document.getElementById('view-roadmap').style.display = 'none';
   document.getElementById('view-courses').style.display = 'none';
   document.getElementById('view-course').style.display = 'none';
+  document.getElementById('view-series').style.display = 'none';
+  document.getElementById('view-series-detail').style.display = 'none';
   document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
 
   if(hash.startsWith('#/post/')){
@@ -2003,6 +2228,17 @@ function router(){
     const link = document.querySelector('.nav-link[data-view="roadmaps"]');
     if(link) link.classList.add('active');
     loadRoadmaps();
+    window.scrollTo(0,0);
+  } else if(hash.startsWith('#/series/')){
+    const id = hash.replace('#/series/', '');
+    document.getElementById('view-series-detail').style.display = 'block';
+    renderSeriesDetail(id);
+    window.scrollTo(0,0);
+  } else if(hash === '#/series'){
+    document.getElementById('view-series').style.display = 'block';
+    const link = document.querySelector('.nav-link[data-view="series"]');
+    if(link) link.classList.add('active');
+    renderSeriesGrid();
     window.scrollTo(0,0);
   } else if(hash.startsWith('#/question/')){
     const id = hash.replace('#/question/', '');
@@ -2370,8 +2606,10 @@ function switchAdminTab(tab){
 
 async function loadAdminData(){
   await loadSections();
+  await loadSeries();
   await loadAdminPosts();
   await loadAdminSections();
+  await loadAdminSeriesTable();
   await loadAdminMessages();
   await loadAdminQuestions();
   await loadAdminComments();
@@ -2955,6 +3193,8 @@ async function editPost(id){
   document.getElementById('postId').value = p.id;
   document.getElementById('postTitle').value = p.title;
   document.getElementById('postSection').value = p.section_id || '';
+  document.getElementById('postSeries').value = p.series_id || '';
+  document.getElementById('postSeriesOrder').value = p.series_order || 0;
   document.getElementById('postCover').value = p.cover_url || '';
   document.getElementById('postExcerpt').value = p.excerpt || '';
   document.getElementById('postTags').value = Array.isArray(p.tags) ? p.tags.join(', ') : '';
@@ -3009,6 +3249,8 @@ function resetPostForm(){
   document.getElementById('postId').value = '';
   document.getElementById('postTitle').value = '';
   document.getElementById('postSection').value = '';
+  document.getElementById('postSeries').value = '';
+  document.getElementById('postSeriesOrder').value = 0;
   document.getElementById('postCover').value = '';
   document.getElementById('postExcerpt').value = '';
   document.getElementById('postTags').value = '';
@@ -3021,6 +3263,8 @@ async function savePost(){
   const id = document.getElementById('postId').value;
   const title = document.getElementById('postTitle').value.trim();
   const section_id = document.getElementById('postSection').value || null;
+  const series_id = document.getElementById('postSeries').value || null;
+  const series_order = parseInt(document.getElementById('postSeriesOrder').value, 10) || 0;
   const cover_url = document.getElementById('postCover').value.trim();
   const excerpt = document.getElementById('postExcerpt').value.trim();
   const tagsRaw = document.getElementById('postTags').value.trim();
@@ -3032,14 +3276,16 @@ async function savePost(){
   if(!title || !content){ toast('Title parameters and deployment content parameters are strictly required.'); return; }
 
   const payload = {title, section_id, cover_url, excerpt, content, published};
-  const payloadFull = {...payload, tags, featured_style};
-  let error, usedFeaturedStyle = true, usedTags = true;
+  const payloadFull = {...payload, tags, featured_style, series_id, series_order};
+  let error, usedFeaturedStyle = true, usedTags = true, usedSeries = true;
   if(id){
     ({error} = await supa.from('posts').update(payloadFull).eq('id', id));
+    if(error){ usedSeries = false; ({error} = await supa.from('posts').update({...payload, tags, featured_style}).eq('id', id)); }
     if(error){ usedFeaturedStyle = false; ({error} = await supa.from('posts').update({...payload, tags}).eq('id', id)); }
     if(error){ usedTags = false; ({error} = await supa.from('posts').update(payload).eq('id', id)); }
   } else {
     ({error} = await supa.from('posts').insert(payloadFull));
+    if(error){ usedSeries = false; ({error} = await supa.from('posts').insert({...payload, tags, featured_style})); }
     if(error){ usedFeaturedStyle = false; ({error} = await supa.from('posts').insert({...payload, tags})); }
     if(error){ usedTags = false; ({error} = await supa.from('posts').insert(payload)); }
   }
@@ -3049,6 +3295,9 @@ async function savePost(){
   }
   if(tags.length && !usedTags){
     toast('⚠️ Saved, but "tags" column is missing on the posts table.', 'err');
+  }
+  if(series_id && !usedSeries){
+    toast('⚠️ Saved, but series columns are missing. Run the series SQL setup in Supabase (see setup notes).', 'err');
   }
   resetPostForm();
   await loadAdminPosts();
@@ -3094,6 +3343,67 @@ async function deleteSection(id){
   await supa.from('sections').delete().eq('id', id);
   await loadSections();
   await loadAdminSections();
+}
+
+/* ---- SERIES / COLLECTIONS MANAGEMENT ---- */
+async function loadAdminSeriesTable(){
+  const tbody = document.getElementById('seriesTableBody');
+  if(!tbody) return;
+  tbody.innerHTML = seriesCache.map(s => {
+    const count = postsCache.filter(p => p.series_id === s.id).length;
+    return `<tr>
+      <td style="font-weight:600">${esc(s.name)}</td>
+      <td>${count}</td>
+      <td class="row-actions">
+        <button class="icon-btn" onclick="editSeries('${s.id}')">✏️ Modify</button>
+        <button class="icon-btn danger" onclick="deleteSeries('${s.id}')">🗑️ Purge</button>
+      </td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="3">لا توجد سلاسل بعد.</td></tr>`;
+}
+
+function resetSeriesForm(){
+  document.getElementById('seriesId').value = '';
+  document.getElementById('seriesName').value = '';
+  document.getElementById('seriesCover').value = '';
+  document.getElementById('seriesDescription').value = '';
+}
+
+async function editSeries(id){
+  const s = seriesCache.find(x => x.id === id);
+  if(!s) return;
+  document.getElementById('seriesId').value = s.id;
+  document.getElementById('seriesName').value = s.name;
+  document.getElementById('seriesCover').value = s.cover_url || '';
+  document.getElementById('seriesDescription').value = s.description || '';
+  window.scrollTo(0,0);
+}
+
+async function saveSeries(){
+  const id = document.getElementById('seriesId').value;
+  const name = document.getElementById('seriesName').value.trim();
+  const cover_url = document.getElementById('seriesCover').value.trim();
+  const description = document.getElementById('seriesDescription').value.trim();
+  if(!name){ toast('اسم السلسلة مطلوب.'); return; }
+  const payload = {name, cover_url, description};
+  let error;
+  if(id){
+    ({error} = await supa.from('series').update(payload).eq('id', id));
+  } else {
+    ({error} = await supa.from('series').insert(payload));
+  }
+  if(error){ toast('❌ فشل حفظ السلسلة: ' + error.message + ' — تأكد من إنشاء جدول series (راجع ملاحظات الإعداد).', 'err'); return; }
+  resetSeriesForm();
+  await loadSeries();
+  await loadAdminSeriesTable();
+  toast('✅ تم حفظ السلسلة بنجاح.', 'ok');
+}
+
+async function deleteSeries(id){
+  if(!confirm('حذف هذه السلسلة؟ ستبقى المقالات لكنها ستفقد ربطها بالسلسلة.')) return;
+  await supa.from('series').delete().eq('id', id);
+  await loadSeries();
+  await loadAdminSeriesTable();
 }
 
 /* ---- ARTICLE COMMENTS MODERATION ---- */
@@ -4003,16 +4313,129 @@ function restorePostLikeState(postId){
   if(getLikedPosts().includes(postId)){ btn.classList.add('liked'); btn.disabled = true; }
 }
 
+/* ================== AI ARTICLE SUMMARY ================== */
+async function generateAISummary(postId){
+  const box = document.getElementById('aiSummaryBox');
+  const btn = document.getElementById('aiSummarizeBtn');
+  if(btn){ btn.disabled = true; btn.textContent = '✨ جارِ التلخيص بالذكاء الاصطناعي...'; }
+  const post = postsCache.find(x => x.id === postId);
+  const plainText = ((post && post.content) || document.getElementById('postContentBody').innerHTML || '')
+    .replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  try{
+    const res = await fetch('/api/summarize', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({content: plainText})
+    });
+    const data = await res.json();
+    if(!res.ok || !data.summary) throw new Error(data.error || 'فشل توليد الملخص');
+    box.innerHTML = `<div class="ai-summary-label">✨ ملخص بالذكاء الاصطناعي</div><div class="ai-summary-text">${esc(data.summary)}</div>`;
+    // Cache the summary so future readers don't re-trigger the AI call
+    await supa.rpc('set_post_ai_summary', {p_id: postId, p_summary: data.summary});
+    if(post) post.ai_summary = data.summary;
+  }catch(err){
+    toast('❌ تعذّر توليد الملخص: ' + err.message + ' — تأكد من إعداد /api/summarize ومفتاح ANTHROPIC_API_KEY في Vercel.', 'err');
+    if(btn){ btn.disabled = false; btn.textContent = '✨ لخّص المقال بالذكاء الاصطناعي'; }
+  }
+}
+
+/* ================== AI CHATBOT (asks the blog's own content) ================== */
+let aiChatHistory = [];
+function toggleAIChat(){
+  const panel = document.getElementById('aiChatPanel');
+  panel.classList.toggle('open');
+  if(panel.classList.contains('open') && !aiChatHistory.length){
+    appendAIChatBubble('assistant', 'أهلاً 👋 أنا مساعد Ah Stack. اسألني عن أي موضوع تقني نُشر في المدونة وسأحاول مساعدتك بالاعتماد على المقالات المتاحة.');
+  }
+}
+function appendAIChatBubble(role, text){
+  const list = document.getElementById('aiChatMessages');
+  const bubble = document.createElement('div');
+  bubble.className = 'ai-chat-bubble ' + role;
+  bubble.textContent = text;
+  list.appendChild(bubble);
+  list.scrollTop = list.scrollHeight;
+}
+function findRelevantPosts(question){
+  const words = question.toLowerCase().split(/\s+/).filter(w => w.length > 1);
+  const scored = postsCache.map(p => {
+    const hay = ((p.title || '') + ' ' + (p.excerpt || '') + ' ' + (p.content || '').replace(/<[^>]+>/g,' ')).toLowerCase();
+    let score = 0;
+    words.forEach(w => { if(hay.includes(w)) score++; });
+    return {p, score};
+  }).filter(x => x.score > 0).sort((a,b) => b.score - a.score).slice(0, 4);
+  return scored.map(x => ({title: x.p.title, excerpt: x.p.excerpt || '', id: x.p.id}));
+}
+async function sendAIChatMessage(){
+  const input = document.getElementById('aiChatInput');
+  const question = input.value.trim();
+  if(!question) return;
+  input.value = '';
+  appendAIChatBubble('user', question);
+  const typingId = 'typing-' + Date.now();
+  const list = document.getElementById('aiChatMessages');
+  const typingEl = document.createElement('div');
+  typingEl.className = 'ai-chat-bubble assistant';
+  typingEl.id = typingId;
+  typingEl.textContent = '...يكتب';
+  list.appendChild(typingEl);
+  list.scrollTop = list.scrollHeight;
+
+  const context = findRelevantPosts(question);
+  try{
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({question, context, history: aiChatHistory})
+    });
+    const data = await res.json();
+    document.getElementById(typingId)?.remove();
+    if(!res.ok || !data.answer) throw new Error(data.error || 'فشل الحصول على إجابة');
+    appendAIChatBubble('assistant', data.answer);
+    aiChatHistory.push({role: 'user', content: question});
+    aiChatHistory.push({role: 'assistant', content: data.answer});
+    if(aiChatHistory.length > 12) aiChatHistory = aiChatHistory.slice(-12);
+  }catch(err){
+    document.getElementById(typingId)?.remove();
+    appendAIChatBubble('assistant', '⚠️ تعذّر الاتصال بالمساعد الذكي حالياً (' + err.message + ').');
+  }
+}
+
+/* ================== REALTIME NOTIFICATIONS (Supabase Realtime) ================== */
+let commentsRealtimeChannel = null;
+function initRealtimeNotifications(){
+  supa.channel('public:posts:new')
+    .on('postgres_changes', {event: 'INSERT', schema: 'public', table: 'posts'}, (payload) => {
+      const p = payload.new;
+      if(p && p.published !== false){
+        toast('🆕 مقال جديد نُشر الآن: ' + p.title, 'info');
+        loadPosts();
+      }
+    })
+    .subscribe();
+}
+function subscribeToPostComments(postId){
+  if(commentsRealtimeChannel){ supa.removeChannel(commentsRealtimeChannel); commentsRealtimeChannel = null; }
+  commentsRealtimeChannel = supa.channel('public:comments:' + postId)
+    .on('postgres_changes', {event: 'INSERT', schema: 'public', table: 'comments', filter: 'post_id=eq.' + postId}, () => {
+      toast('💬 تعليق جديد على هذا المقال', 'info');
+      loadComments(postId);
+    })
+    .subscribe();
+}
+
 /* ================== INITIATE RUNTIME PIPELINE ================== */
 (async function init(){
   await loadSiteBranding();
   await loadSections();
+  await loadSeries();
   await loadPosts();
   router();
   markReveal(document);
   typeHero();
   gmUpdateNavPoints();
   updateSavedCountDot();
+  initRealtimeNotifications();
 })();
 </script>
 </body>
