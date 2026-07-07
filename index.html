@@ -10,31 +10,31 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --bg: #ffffff;
-  --bg-soft: #eef1f6;
+  --bg: #fbfbfd;
+  --bg-soft: #f0f3f8;
   --card: #ffffff;
-  --border: #cbd5e1;
-  --text: #0f172a;
-  --text-dim: #475569;
+  --border: #dde3ec;
+  --text: #1a2233;
+  --text-dim: #5b6577;
   --accent: #ef4444; /* Tech Red */
   --accent-hover: #dc2626;
   --dark-hold: #1e293b;
   --radius: 12px;
-  --shadow: 0 4px 6px -1px rgba(0,0,0,0.09), 0 2px 4px -1px rgba(0,0,0,0.07);
-  --shadow-md: 0 10px 20px -3px rgba(0,0,0,0.12), 0 4px 8px -2px rgba(0,0,0,0.08);
+  --shadow: 0 2px 8px -2px rgba(30,41,59,0.08), 0 1px 3px -1px rgba(30,41,59,0.06);
+  --shadow-md: 0 8px 24px -6px rgba(30,41,59,0.12), 0 3px 8px -3px rgba(30,41,59,0.08);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 html[data-theme="dark"]{
-  --bg: #070b16;
-  --bg-soft: #0f1626;
-  --card: #141d33;
-  --border: #35455e;
-  --text: #f8fafc;
-  --text-dim: #aebbcf;
+  --bg: #0e1420;
+  --bg-soft: #151d2e;
+  --card: #1a2336;
+  --border: #2e3a52;
+  --text: #e8edf5;
+  --text-dim: #9aa7bd;
   --accent: #ef4444;
   --accent-hover: #f87171;
-  --shadow: 0 4px 6px -1px rgba(0,0,0,0.4), 0 2px 4px -1px rgba(0,0,0,0.3);
-  --shadow-md: 0 10px 20px -3px rgba(0,0,0,0.5), 0 4px 8px -2px rgba(0,0,0,0.35);
+  --shadow: 0 2px 8px -2px rgba(0,0,0,0.3), 0 1px 3px -1px rgba(0,0,0,0.2);
+  --shadow-md: 0 8px 24px -6px rgba(0,0,0,0.4), 0 3px 8px -3px rgba(0,0,0,0.3);
 }
 body, .post-cover, .editor-area{ transition: background-color .3s ease, color .3s ease, border-color .3s ease; }
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
@@ -801,6 +801,12 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
       </div>
     </div>
     <div class="gm-header" id="gmLevelCard"></div>
+    <div class="gm-header" style="margin-top:14px">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+        <input type="text" id="gmNameInput" placeholder="Add a display name to appear on the leaderboard (optional)" style="flex:1; min-width:220px; padding:10px 14px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:14px">
+        <button class="btn secondary" onclick="gmSaveDisplayNameFromInput()">💾 Save Name</button>
+      </div>
+    </div>
     <div class="gm-stats-grid" id="gmStatsGrid"></div>
     <div class="gm-badges-head">🎖️ Badges</div>
     <div class="gm-badges-grid" id="gmBadgesGrid"></div>
@@ -911,28 +917,22 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
       <div class="admin-tab" data-tab="courses" onclick="switchAdminTab('courses')">🎓 Courses</div>
       <div class="admin-tab" data-tab="roadmaps" onclick="switchAdminTab('roadmaps')">🗺️ Roadmaps</div>
       <div class="admin-tab" data-tab="questions" onclick="switchAdminTab('questions')">💬 Community Q&A</div>
+      <div class="admin-tab" data-tab="leaderboard" onclick="switchAdminTab('leaderboard')">🏆 Leaderboard</div>
       <div class="admin-tab" data-tab="messages" onclick="switchAdminTab('messages')">✉️ Inbound Transmissions</div>
       <div class="admin-tab" data-tab="settings" onclick="switchAdminTab('settings')">🔑 Configuration Token</div>
     </div>
 
     <div class="admin-panel active" id="panel-posts">
-      <div class="admin-card" style="border-color:var(--accent); background:linear-gradient(135deg, var(--card), var(--bg-soft))">
-        <h3 style="margin-bottom:8px">🪄 Auto-Format Engine (built-in, no setup)</h3>
-        <p style="font-size:13px; color:var(--text-dim)">
-          Every time you click "Deploy Article", the content is automatically cleaned up and re-formatted before saving:
-          stray text gets wrapped into proper paragraphs, plain links become clickable, empty blocks are removed, and the
-          opening paragraph is styled as a lead-in. No button to click, no API keys, no external service — it just runs.
-        </p>
-        <div class="row-actions">
-          <button class="btn secondary" onclick="autoFetchCoverImage()">🖼️ Auto-Fetch Cover Image (free stock photo)</button>
-        </div>
-        <div class="msg-status" id="aiWriterStatus"></div>
-      </div>
       <div class="admin-card">
         <h3 style="margin-bottom:14px" id="postFormTitle">➕ Stage New Post</h3>
         <input type="hidden" id="postId">
         <div class="form-grid">
           <input type="text" id="postTitle" placeholder="Article Title Description">
+        </div>
+        <div class="form-grid" style="margin-top:-14px">
+          <div style="display:flex; gap:10px; align-items:center">
+            <button type="button" class="icon-btn" onclick="autoFetchCoverImage()">🖼️ Free Stock Cover Photo</button>
+          </div>
           <select id="postSection"></select>
           <div style="display:flex; gap:10px; align-items:center">
             <input type="text" id="postCover" placeholder="Cover Image URL asset (Optional)" style="flex:1">
@@ -1107,6 +1107,17 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
         <table>
           <thead><tr><th>Answer</th><th>Author</th><th>Best?</th><th>Date</th><th>Actions</th></tr></thead>
           <tbody id="adminAnswersTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="admin-panel" id="panel-leaderboard">
+      <div class="admin-card">
+        <h3 style="margin-bottom:14px">🏆 Visitor Leaderboard</h3>
+        <p style="font-size:13px; color:var(--text-dim); margin-bottom:14px">Points earned by visitors across devices — completing roadmap steps, lessons, asking questions, and answering others.</p>
+        <table>
+          <thead><tr><th>Visitor</th><th>Points</th><th>Steps</th><th>Lessons</th><th>Questions</th><th>Answers</th><th>Badges</th><th>Last Active</th><th>Actions</th></tr></thead>
+          <tbody id="adminLeaderboardTableBody"></tbody>
         </table>
       </div>
     </div>
@@ -1565,6 +1576,7 @@ async function loadAdminData(){
   await loadAdminQuestions();
   await loadAdminRoadmaps();
   await loadAdminCourses();
+  await loadAdminLeaderboard();
 }
 
 /* ================== ADMIN: COURSES MANAGEMENT ================== */
@@ -2142,13 +2154,9 @@ async function savePost(){
   const cover_url = document.getElementById('postCover').value.trim();
   const excerpt = document.getElementById('postExcerpt').value.trim();
   const published = document.getElementById('postPublished').checked;
-  const rawContent = document.getElementById('postContent').innerHTML.trim();
+  const content = document.getElementById('postContent').innerHTML.trim();
 
-  if(!title || !rawContent){ alert('Title parameters and deployment content parameters are strictly required.'); return; }
-
-  // Automatically clean up and re-format the content before saving — no button, no setup.
-  const content = autoFormatContent(rawContent);
-  document.getElementById('postContent').innerHTML = content; // reflect the cleaned-up version back in the editor
+  if(!title || !content){ alert('Title parameters and deployment content parameters are strictly required.'); return; }
 
   const payload = {title, section_id, cover_url, excerpt, content, published};
   let error;
@@ -2489,6 +2497,7 @@ function handleStepToggle(roadmapId, stepId){
 
 /* ================== GAMIFICATION: POINTS & BADGES ================== */
 const GM_KEY = 'gm_profile_v1';
+const GM_DEVICE_KEY = 'gm_device_id_v1';
 const GM_POINTS = {step: 5, lesson: 10, question: 5, answer: 8};
 
 const GM_BADGES = [
@@ -2502,16 +2511,43 @@ const GM_BADGES = [
   {id:'club_500', icon:'💯', name:'500 Club', desc:'Reach 500 points', check: s => s.points >= 500},
 ];
 
+function gmGetDeviceId(){
+  let id = localStorage.getItem(GM_DEVICE_KEY);
+  if(!id){
+    id = 'dev-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    localStorage.setItem(GM_DEVICE_KEY, id);
+  }
+  return id;
+}
+
 function gmGetProfile(){
   try{
     const raw = JSON.parse(localStorage.getItem(GM_KEY) || 'null');
     if(raw) return raw;
   }catch(e){ /* fall through to default */ }
-  return {points:0, badges:[], stepsCompleted:0, lessonsCompleted:0, questionsAsked:0, answersPosted:0};
+  return {points:0, badges:[], displayName:'', stepsCompleted:0, lessonsCompleted:0, questionsAsked:0, answersPosted:0};
 }
 
 function gmSaveProfile(profile){
   localStorage.setItem(GM_KEY, JSON.stringify(profile));
+}
+
+async function gmSyncToServer(profile){
+  try{
+    await supa.from('leaderboard').upsert({
+      device_id: gmGetDeviceId(),
+      display_name: profile.displayName || null,
+      points: profile.points,
+      steps_completed: profile.stepsCompleted,
+      lessons_completed: profile.lessonsCompleted,
+      questions_asked: profile.questionsAsked,
+      answers_posted: profile.answersPosted,
+      badges: profile.badges,
+      updated_at: new Date().toISOString(),
+    }, {onConflict: 'device_id'});
+  }catch(err){
+    console.warn('Could not sync points to server (leaderboard table may be missing):', err.message);
+  }
 }
 
 function gmAward(action){
@@ -2532,13 +2568,27 @@ function gmAward(action){
 
   gmSaveProfile(profile);
   gmUpdateNavPoints();
+  gmSyncToServer(profile);
   newlyUnlocked.forEach(b => gmShowToast(b));
   return profile;
+}
+
+function gmSetDisplayName(name){
+  const profile = gmGetProfile();
+  profile.displayName = name.trim();
+  gmSaveProfile(profile);
+  gmSyncToServer(profile);
 }
 
 function gmUpdateNavPoints(){
   const el = document.getElementById('navPointsCount');
   if(el) el.textContent = gmGetProfile().points;
+}
+
+function gmSaveDisplayNameFromInput(){
+  const name = document.getElementById('gmNameInput').value.trim();
+  gmSetDisplayName(name);
+  alert(name ? '✅ Name saved! It will appear on the admin leaderboard.' : 'Name cleared.');
 }
 
 function gmShowToast(badge){
@@ -2557,9 +2607,43 @@ function gmLevelFromPoints(points){
   return {level, intoLevel, remaining: 100 - intoLevel};
 }
 
+/* ================== ADMIN: LEADERBOARD ================== */
+async function loadAdminLeaderboard(){
+  const tbody = document.getElementById('adminLeaderboardTableBody');
+  try{
+    const {data, error} = await supa.from('leaderboard').select('*').order('points', {ascending:false});
+    if(error) throw error;
+    const rows = data || [];
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td style="font-weight:600">${esc(r.display_name || 'Anonymous')} <span style="font-size:11px; color:var(--text-dim); font-weight:400">(${esc((r.device_id || '').slice(0, 10))}…)</span></td>
+        <td style="font-weight:700; color:var(--accent)">${r.points}</td>
+        <td>${r.steps_completed ?? 0}</td>
+        <td>${r.lessons_completed ?? 0}</td>
+        <td>${r.questions_asked ?? 0}</td>
+        <td>${r.answers_posted ?? 0}</td>
+        <td>${(r.badges || []).length}</td>
+        <td style="font-size:12px; color:var(--text-dim)">${fmtDate(r.updated_at)}</td>
+        <td class="row-actions">
+          <button class="icon-btn danger" onclick="deleteLeaderboardEntry('${r.device_id}')">🗑️</button>
+        </td>
+      </tr>
+    `).join('') || `<tr><td colspan="9">No visitor activity yet.</td></tr>`;
+  }catch(err){
+    tbody.innerHTML = `<tr><td colspan="9">Could not load — make sure the "leaderboard" table exists in Supabase.</td></tr>`;
+  }
+}
+
+async function deleteLeaderboardEntry(deviceId){
+  if(!confirm('Remove this visitor\'s points from the leaderboard?')) return;
+  await supa.from('leaderboard').delete().eq('device_id', deviceId);
+  await loadAdminLeaderboard();
+}
+
 function renderProgressDashboard(){
   const profile = gmGetProfile();
   const {level, intoLevel} = gmLevelFromPoints(profile.points);
+  document.getElementById('gmNameInput').value = profile.displayName || '';
 
   document.getElementById('gmLevelCard').innerHTML = `
     <div class="gm-level-card">
@@ -2738,125 +2822,12 @@ async function showQuestion(id){
 }
 
 /* ================== BUILT-IN AUTO-FORMAT ENGINE ================== */
-/**
- * Cleans up and re-formats raw contenteditable HTML before saving.
- * Pure client-side logic — no external service, no API keys, runs automatically.
- */
-function autoFormatContent(rawHtml){
-  const container = document.createElement('div');
-  container.innerHTML = rawHtml;
-
-  // 1. Turn any stray <div> wrappers (common contenteditable artifact) into <p>
-  container.querySelectorAll('div').forEach(div => {
-    const p = document.createElement('p');
-    p.innerHTML = div.innerHTML;
-    div.replaceWith(p);
-  });
-
-  // 2. Wrap any orphan text/inline nodes that sit directly under the root into <p>
-  Array.from(container.childNodes).forEach(node => {
-    const isTextWithContent = node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0;
-    const isInlineEl = node.nodeType === Node.ELEMENT_NODE && /^(B|STRONG|I|EM|U|A|SPAN|BR)$/.test(node.tagName);
-    if(isTextWithContent || isInlineEl){
-      const p = document.createElement('p');
-      node.replaceWith(p);
-      p.appendChild(node);
-      // Pull in following inline siblings so they don't each get their own <p>
-      while(p.nextSibling && (p.nextSibling.nodeType === Node.TEXT_NODE || /^(B|STRONG|I|EM|U|A|SPAN|BR)$/.test(p.nextSibling.tagName || ''))){
-        p.appendChild(p.nextSibling);
-      }
-    }
-  });
-
-  // 3. Remove empty / whitespace-only paragraphs and headings
-  container.querySelectorAll('p, h2, h3, blockquote').forEach(el => {
-    if(el.textContent.trim() === '' && el.querySelectorAll('img').length === 0){
-      el.remove();
-    }
-  });
-
-  // 3b. Convert markdown-style "## " / "### " prefixes typed by hand into real headings
-  container.querySelectorAll('p').forEach(p => {
-    const text = p.textContent.trim();
-    if(/^###\s+/.test(text)){
-      const h3 = document.createElement('h3');
-      h3.innerHTML = p.innerHTML.replace(/^(\s*###\s+)/, '');
-      p.replaceWith(h3);
-    } else if(/^##\s+/.test(text)){
-      const h2 = document.createElement('h2');
-      h2.innerHTML = p.innerHTML.replace(/^(\s*##\s+)/, '');
-      p.replaceWith(h2);
-    }
-  });
-
-  // 3c. Auto-detect subheadings: a short standalone line (no ending punctuation,
-  // not already inside a link/list) directly followed by a noticeably longer paragraph
-  // is almost always a section title someone typed without formatting it.
-  const paragraphs = Array.from(container.querySelectorAll('p'));
-  paragraphs.forEach((p, idx) => {
-    if(idx === 0) return; // never touch the lead paragraph
-    const text = p.textContent.trim();
-    const looksLikeHeading = text.length > 0 && text.length <= 60
-      && !/[.!?؟،,]$/.test(text)
-      && !p.querySelector('a, img')
-      && p.children.length === 0; // plain text only, no inline formatting mixed in
-    const next = p.nextElementSibling;
-    const nextIsLongParagraph = next && next.tagName === 'P' && next.textContent.trim().length > 80;
-    if(looksLikeHeading && nextIsLongParagraph){
-      const h2 = document.createElement('h2');
-      h2.innerHTML = p.innerHTML;
-      p.replaceWith(h2);
-    }
-  });
-
-  // 3d. Group consecutive "- item" / "* item" / "• item" paragraphs into a real <ul>
-  const blocks = Array.from(container.children);
-  let i = 0;
-  while(i < blocks.length){
-    const el = blocks[i];
-    if(el.tagName === 'P' && /^[-*•]\s+/.test(el.textContent.trim())){
-      const ul = document.createElement('ul');
-      let j = i;
-      while(j < blocks.length && blocks[j].tagName === 'P' && /^[-*•]\s+/.test(blocks[j].textContent.trim())){
-        const li = document.createElement('li');
-        li.innerHTML = blocks[j].innerHTML.replace(/^(\s*[-*•]\s+)/, '');
-        ul.appendChild(li);
-        j++;
-      }
-      el.replaceWith(ul);
-      for(let k = i + 1; k < j; k++){ blocks[k].remove(); }
-      blocks.splice(i, j - i, ul);
-    }
-    i++;
-  }
-
-  // 4. Auto-linkify plain-text URLs that aren't already inside an <a> tag
-  const urlPattern = /(https?:\/\/[^\s<]+)/g;
-  container.querySelectorAll('p, li').forEach(el => {
-    if(el.querySelector('a')) return; // skip blocks that already contain links
-    if(urlPattern.test(el.innerHTML)){
-      el.innerHTML = el.innerHTML.replace(urlPattern, url => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
-    }
-  });
-
-  // 5. Style the very first paragraph as a lead-in for a stronger visual hierarchy
-  const firstP = container.querySelector('p');
-  if(firstP) firstP.classList.add('lead-paragraph');
-
-  // 6. Collapse 3+ consecutive <br> into a single paragraph break
-  container.innerHTML = container.innerHTML.replace(/(<br\s*\/?>\s*){3,}/gi, '<br>');
-
-  return container.innerHTML;
-}
-
 function autoFetchCoverImage(){
   const title = document.getElementById('postTitle').value.trim();
   if(!title){ alert('Type an article title first so we know what image to fetch.'); return; }
   const keywords = encodeURIComponent(title.split(' ').slice(0, 4).join(','));
   const url = `https://source.unsplash.com/1200x630/?${keywords}`;
   document.getElementById('postCover').value = url;
-  document.getElementById('aiWriterStatus').className = 'msg-status ok';
-  document.getElementById('aiWriterStatus').textContent = '✅ Free stock cover image attached (from Unsplash, based on your title keywords).';
 }
 
 /* ================== HERO HEADLINE TYPING ANIMATION ================== */
