@@ -370,6 +370,55 @@ main{max-width:1100px; margin:0 auto; padding:20px}
 
 @media (max-width:800px){ .cr-detail-wrap{grid-template-columns:1fr} }
 
+/* ===== Gamification: Points, Badges, Progress Dashboard ===== */
+.gm-header{max-width:900px; margin:0 auto; padding:0 20px 20px}
+.gm-level-card{
+  background:linear-gradient(135deg, var(--accent), var(--accent-hover)); border-radius:var(--radius);
+  padding:26px 28px; color:#fff; display:flex; justify-content:space-between; align-items:center; gap:20px;
+  box-shadow:var(--shadow-md); flex-wrap:wrap;
+}
+.gm-level-card .lvl-num{font-size:38px; font-weight:800; line-height:1}
+.gm-level-card .lvl-lbl{font-size:13px; opacity:.9; text-transform:uppercase; letter-spacing:.5px}
+.gm-level-card .pts{font-size:22px; font-weight:700}
+.gm-level-card .bar-wrap{flex:1; min-width:200px}
+.gm-level-card .bar{height:10px; border-radius:6px; background:rgba(255,255,255,.3); overflow:hidden; margin-top:6px}
+.gm-level-card .bar .fill{height:100%; background:#fff; border-radius:6px; transition:width .4s}
+.gm-level-card .bar-label{font-size:12px; opacity:.9}
+
+.gm-stats-grid{max-width:900px; margin:20px auto; padding:0 20px; display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:14px}
+.gm-stat-box{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; text-align:center; box-shadow:var(--shadow)}
+.gm-stat-box .num{font-size:24px; font-weight:800; color:var(--accent)}
+.gm-stat-box .lbl{font-size:12px; color:var(--text-dim); margin-top:4px}
+
+.gm-badges-head{max-width:900px; margin:30px auto 14px; padding:0 20px; font-size:18px; font-weight:800}
+.gm-badges-grid{max-width:900px; margin:0 auto; padding:0 20px 60px; display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:14px}
+.gm-badge{
+  background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px 12px; text-align:center;
+  box-shadow:var(--shadow); transition:.2s;
+}
+.gm-badge.locked{opacity:.4; filter:grayscale(1)}
+.gm-badge:not(.locked):hover{transform:translateY(-3px); border-color:var(--accent)}
+.gm-badge .icon{font-size:32px; margin-bottom:8px}
+.gm-badge .name{font-size:13px; font-weight:700}
+.gm-badge .desc{font-size:11px; color:var(--text-dim); margin-top:4px}
+
+.gm-toast{
+  position:fixed; bottom:24px; right:24px; z-index:9999;
+  background:var(--card); border:2px solid var(--accent); border-radius:12px; padding:16px 20px;
+  box-shadow:var(--shadow-md); display:flex; align-items:center; gap:14px;
+  transform:translateX(120%); transition:transform .4s ease; max-width:320px;
+}
+.gm-toast.show{transform:translateX(0)}
+.gm-toast .icon{font-size:32px}
+.gm-toast .title{font-weight:800; font-size:14px; color:var(--accent)}
+.gm-toast .desc{font-size:12px; color:var(--text-dim)}
+@media (max-width:600px){ .gm-toast{right:12px; left:12px; max-width:none} }
+
+.gm-nav-points{
+  display:inline-flex; align-items:center; gap:5px; background:var(--bg-soft); border:1px solid var(--border);
+  border-radius:20px; padding:4px 12px; font-size:13px; font-weight:700; color:var(--text);
+}
+
 /* ===== Roadmaps ===== */
 .rm-grid{max-width:1100px; margin:0 auto; padding:0 20px 20px; display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:20px}
 .rm-card{
@@ -632,6 +681,7 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
         <a href="#/roadmaps" class="nav-link" data-view="roadmaps">Roadmaps</a>
         <a href="#/courses" class="nav-link" data-view="courses">Courses</a>
         <a href="#/questions" class="nav-link" data-view="questions">Questions</a>
+        <a href="#/progress" class="nav-link" data-view="progress">🏆 <span id="navPointsCount">0</span> pts</a>
         <a href="#/contact" class="nav-link" data-view="contact">Contact</a>
         <button class="theme-toggle" id="themeToggleBtn" title="Toggle dark mode" onclick="toggleTheme()">🌙</button>
       </nav>
@@ -739,6 +789,23 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
     <div id="roadmapDetail"></div>
   </div>
 
+  <div id="view-progress" style="display:none">
+    <div class="section-banner">
+      <div class="crumb"><a onclick="location.hash='#/'">Home</a> <span>→</span> <span>My Progress</span></div>
+      <div class="section-hero">
+        <div class="icon">🏆</div>
+        <div>
+          <h1>My Progress</h1>
+          <p>Points and badges earned on this device — completing steps, lessons, and joining discussions.</p>
+        </div>
+      </div>
+    </div>
+    <div class="gm-header" id="gmLevelCard"></div>
+    <div class="gm-stats-grid" id="gmStatsGrid"></div>
+    <div class="gm-badges-head">🎖️ Badges</div>
+    <div class="gm-badges-grid" id="gmBadgesGrid"></div>
+  </div>
+
   <div id="view-questions" style="display:none">
     <div class="section-banner">
       <div class="crumb"><a onclick="location.hash='#/'">Home</a> <span>→</span> <span>Community Questions</span></div>
@@ -805,6 +872,14 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
   <footer>
     © 2026 Ah Stack — Built for scaling builders. All rights reserved.
   </footer>
+</div>
+
+<div class="gm-toast" id="gmToast">
+  <div class="icon" id="gmToastIcon">🏆</div>
+  <div>
+    <div class="title" id="gmToastTitle">Badge Unlocked!</div>
+    <div class="desc" id="gmToastDesc"></div>
+  </div>
 </div>
 
 <div class="modal-backdrop" id="adminModal">
@@ -1271,6 +1346,7 @@ function router(){
   document.getElementById('view-contact').style.display = 'none';
   document.getElementById('view-questions').style.display = 'none';
   document.getElementById('view-question').style.display = 'none';
+  document.getElementById('view-progress').style.display = 'none';
   document.getElementById('view-roadmaps').style.display = 'none';
   document.getElementById('view-roadmap').style.display = 'none';
   document.getElementById('view-courses').style.display = 'none';
@@ -1320,6 +1396,12 @@ function router(){
     const link = document.querySelector('.nav-link[data-view="questions"]');
     if(link) link.classList.add('active');
     loadQuestions();
+    window.scrollTo(0,0);
+  } else if(hash === '#/progress'){
+    document.getElementById('view-progress').style.display = 'block';
+    const link = document.querySelector('.nav-link[data-view="progress"]');
+    if(link) link.classList.add('active');
+    renderProgressDashboard();
     window.scrollTo(0,0);
   } else if(hash === '#/contact'){
     document.getElementById('view-contact').style.display = 'block';
@@ -2281,10 +2363,12 @@ function renderCourseShell(c, lessons, activeLessonId){
 
 function toggleLessonDone(courseId, lessonId){
   let done = getCourseProgress(courseId);
-  if(done.includes(lessonId)) done = done.filter(x => x !== lessonId);
+  const wasDone = done.includes(lessonId);
+  if(wasDone) done = done.filter(x => x !== lessonId);
   else done.push(lessonId);
   setCourseProgress(courseId, done);
   renderCourseShell(window.currentCourseObj, window.currentCourseLessons, lessonId);
+  if(!wasDone) gmAward('lesson');
 }
 
 /* ================== ROADMAPS ================== */
@@ -2397,8 +2481,117 @@ function renderRoadmapDetail(r, stepList){
 }
 
 function handleStepToggle(roadmapId, stepId){
-  toggleRoadmapStep(roadmapId, stepId);
+  const wasDone = getRoadmapProgress(roadmapId).includes(stepId);
+  const nowDone = toggleRoadmapStep(roadmapId, stepId);
   renderRoadmapDetail(window.currentRoadmapObj, window.currentRoadmapSteps);
+  if(!wasDone && nowDone.includes(stepId)) gmAward('step');
+}
+
+/* ================== GAMIFICATION: POINTS & BADGES ================== */
+const GM_KEY = 'gm_profile_v1';
+const GM_POINTS = {step: 5, lesson: 10, question: 5, answer: 8};
+
+const GM_BADGES = [
+  {id:'first_step', icon:'🚀', name:'First Steps', desc:'Complete your first roadmap step', check: s => s.stepsCompleted >= 1},
+  {id:'roadmap_explorer', icon:'🗺️', name:'Roadmap Explorer', desc:'Complete 10 roadmap steps', check: s => s.stepsCompleted >= 10},
+  {id:'course_starter', icon:'🎬', name:'Course Starter', desc:'Finish your first lesson', check: s => s.lessonsCompleted >= 1},
+  {id:'course_graduate', icon:'🎓', name:'Course Graduate', desc:'Finish 20 lessons', check: s => s.lessonsCompleted >= 20},
+  {id:'curious_mind', icon:'💬', name:'Curious Mind', desc:'Ask 3 questions', check: s => s.questionsAsked >= 3},
+  {id:'helper', icon:'🤝', name:'Helper', desc:'Post 5 answers', check: s => s.answersPosted >= 5},
+  {id:'club_100', icon:'🔥', name:'100 Club', desc:'Reach 100 points', check: s => s.points >= 100},
+  {id:'club_500', icon:'💯', name:'500 Club', desc:'Reach 500 points', check: s => s.points >= 500},
+];
+
+function gmGetProfile(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(GM_KEY) || 'null');
+    if(raw) return raw;
+  }catch(e){ /* fall through to default */ }
+  return {points:0, badges:[], stepsCompleted:0, lessonsCompleted:0, questionsAsked:0, answersPosted:0};
+}
+
+function gmSaveProfile(profile){
+  localStorage.setItem(GM_KEY, JSON.stringify(profile));
+}
+
+function gmAward(action){
+  const profile = gmGetProfile();
+  profile.points += GM_POINTS[action] || 0;
+  if(action === 'step') profile.stepsCompleted++;
+  if(action === 'lesson') profile.lessonsCompleted++;
+  if(action === 'question') profile.questionsAsked++;
+  if(action === 'answer') profile.answersPosted++;
+
+  const newlyUnlocked = [];
+  GM_BADGES.forEach(b => {
+    if(!profile.badges.includes(b.id) && b.check(profile)){
+      profile.badges.push(b.id);
+      newlyUnlocked.push(b);
+    }
+  });
+
+  gmSaveProfile(profile);
+  gmUpdateNavPoints();
+  newlyUnlocked.forEach(b => gmShowToast(b));
+  return profile;
+}
+
+function gmUpdateNavPoints(){
+  const el = document.getElementById('navPointsCount');
+  if(el) el.textContent = gmGetProfile().points;
+}
+
+function gmShowToast(badge){
+  const toast = document.getElementById('gmToast');
+  document.getElementById('gmToastIcon').textContent = badge.icon;
+  document.getElementById('gmToastTitle').textContent = 'Badge Unlocked: ' + badge.name;
+  document.getElementById('gmToastDesc').textContent = badge.desc;
+  toast.classList.add('show');
+  clearTimeout(window._gmToastTimer);
+  window._gmToastTimer = setTimeout(() => toast.classList.remove('show'), 4500);
+}
+
+function gmLevelFromPoints(points){
+  const level = Math.floor(points / 100) + 1;
+  const intoLevel = points % 100;
+  return {level, intoLevel, remaining: 100 - intoLevel};
+}
+
+function renderProgressDashboard(){
+  const profile = gmGetProfile();
+  const {level, intoLevel} = gmLevelFromPoints(profile.points);
+
+  document.getElementById('gmLevelCard').innerHTML = `
+    <div class="gm-level-card">
+      <div>
+        <div class="lvl-lbl">Current Level</div>
+        <div class="lvl-num">Lv. ${level}</div>
+      </div>
+      <div class="bar-wrap">
+        <div class="pts">${profile.points} points total</div>
+        <div class="bar"><div class="fill" style="width:${intoLevel}%"></div></div>
+        <div class="bar-label">${100 - intoLevel} points to Level ${level + 1}</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('gmStatsGrid').innerHTML = `
+    <div class="gm-stat-box"><div class="num">${profile.stepsCompleted}</div><div class="lbl">Roadmap Steps</div></div>
+    <div class="gm-stat-box"><div class="num">${profile.lessonsCompleted}</div><div class="lbl">Lessons Completed</div></div>
+    <div class="gm-stat-box"><div class="num">${profile.questionsAsked}</div><div class="lbl">Questions Asked</div></div>
+    <div class="gm-stat-box"><div class="num">${profile.answersPosted}</div><div class="lbl">Answers Posted</div></div>
+  `;
+
+  document.getElementById('gmBadgesGrid').innerHTML = GM_BADGES.map(b => {
+    const unlocked = profile.badges.includes(b.id);
+    return `
+      <div class="gm-badge ${unlocked ? '' : 'locked'}">
+        <div class="icon">${b.icon}</div>
+        <div class="name">${esc(b.name)}</div>
+        <div class="desc">${esc(b.desc)}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 /* ================== COMMUNITY QUESTIONS & ANSWERS ================== */
@@ -2478,6 +2671,7 @@ document.getElementById('askQuestionForm').addEventListener('submit', async (e) 
     document.getElementById('askQuestionForm').reset();
     toggleAskForm(false);
     loadQuestions();
+    gmAward('question');
   }catch(err){
     statusEl.className = 'msg-status err';
     statusEl.textContent = '❌ Failed to post question: ' + err.message;
@@ -2531,6 +2725,7 @@ async function showQuestion(id){
         if(error) throw error;
         statusEl.className = 'msg-status ok';
         statusEl.textContent = '✅ Answer posted!';
+        gmAward('answer');
         setTimeout(() => showQuestion(id), 800);
       }catch(err){
         statusEl.className = 'msg-status err';
@@ -2579,6 +2774,61 @@ function autoFormatContent(rawHtml){
       el.remove();
     }
   });
+
+  // 3b. Convert markdown-style "## " / "### " prefixes typed by hand into real headings
+  container.querySelectorAll('p').forEach(p => {
+    const text = p.textContent.trim();
+    if(/^###\s+/.test(text)){
+      const h3 = document.createElement('h3');
+      h3.innerHTML = p.innerHTML.replace(/^(\s*###\s+)/, '');
+      p.replaceWith(h3);
+    } else if(/^##\s+/.test(text)){
+      const h2 = document.createElement('h2');
+      h2.innerHTML = p.innerHTML.replace(/^(\s*##\s+)/, '');
+      p.replaceWith(h2);
+    }
+  });
+
+  // 3c. Auto-detect subheadings: a short standalone line (no ending punctuation,
+  // not already inside a link/list) directly followed by a noticeably longer paragraph
+  // is almost always a section title someone typed without formatting it.
+  const paragraphs = Array.from(container.querySelectorAll('p'));
+  paragraphs.forEach((p, idx) => {
+    if(idx === 0) return; // never touch the lead paragraph
+    const text = p.textContent.trim();
+    const looksLikeHeading = text.length > 0 && text.length <= 60
+      && !/[.!?؟،,]$/.test(text)
+      && !p.querySelector('a, img')
+      && p.children.length === 0; // plain text only, no inline formatting mixed in
+    const next = p.nextElementSibling;
+    const nextIsLongParagraph = next && next.tagName === 'P' && next.textContent.trim().length > 80;
+    if(looksLikeHeading && nextIsLongParagraph){
+      const h2 = document.createElement('h2');
+      h2.innerHTML = p.innerHTML;
+      p.replaceWith(h2);
+    }
+  });
+
+  // 3d. Group consecutive "- item" / "* item" / "• item" paragraphs into a real <ul>
+  const blocks = Array.from(container.children);
+  let i = 0;
+  while(i < blocks.length){
+    const el = blocks[i];
+    if(el.tagName === 'P' && /^[-*•]\s+/.test(el.textContent.trim())){
+      const ul = document.createElement('ul');
+      let j = i;
+      while(j < blocks.length && blocks[j].tagName === 'P' && /^[-*•]\s+/.test(blocks[j].textContent.trim())){
+        const li = document.createElement('li');
+        li.innerHTML = blocks[j].innerHTML.replace(/^(\s*[-*•]\s+)/, '');
+        ul.appendChild(li);
+        j++;
+      }
+      el.replaceWith(ul);
+      for(let k = i + 1; k < j; k++){ blocks[k].remove(); }
+      blocks.splice(i, j - i, ul);
+    }
+    i++;
+  }
 
   // 4. Auto-linkify plain-text URLs that aren't already inside an <a> tag
   const urlPattern = /(https?:\/\/[^\s<]+)/g;
@@ -2777,6 +3027,7 @@ function markReveal(container){
   router();
   markReveal(document);
   typeHero();
+  gmUpdateNavPoints();
 })();
 </script>
 </body>
