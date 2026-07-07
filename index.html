@@ -1823,17 +1823,23 @@ function toggleReplyForm(commentId){
 async function likeComment(commentId, postId){
   if(getLikedComments().includes(commentId)) return;
   const countEl = document.getElementById('likeCount-' + commentId);
-  const current = parseInt((countEl && countEl.textContent) || '0', 10) || 0;
-  try{
-    const {data: c} = await supa.from('comments').select('likes').eq('id', commentId).single();
-    const newVal = ((c && c.likes) || 0) + 1;
-    await supa.from('comments').update({likes: newVal}).eq('id', commentId);
-    if(countEl) countEl.textContent = newVal;
-  }catch(err){
-    if(countEl) countEl.textContent = current + 1;
-  }
-  markCommentLiked(commentId);
   const btn = countEl ? countEl.closest('.comment-like-btn') : null;
+  if(btn) btn.disabled = true;
+  const {data: c, error: selErr} = await supa.from('comments').select('likes').eq('id', commentId).single();
+  if(selErr){
+    if(btn) btn.disabled = false;
+    toast('⚠️ Comment likes need a column first. Run once in Supabase SQL editor: ALTER TABLE comments ADD COLUMN likes integer DEFAULT 0;', 'err');
+    return;
+  }
+  const newVal = ((c && c.likes) || 0) + 1;
+  const {error: updErr} = await supa.from('comments').update({likes: newVal}).eq('id', commentId);
+  if(updErr){
+    if(btn) btn.disabled = false;
+    toast('❌ Failed to save like: ' + updErr.message, 'err');
+    return;
+  }
+  if(countEl) countEl.textContent = newVal;
+  markCommentLiked(commentId);
   if(btn){ btn.classList.add('liked'); btn.disabled = true; }
 }
 
@@ -2157,15 +2163,15 @@ async function voteHelpful(postId, type){
   if(votes[postId]) return;
   const col = type === 'yes' ? 'helpful_yes' : 'helpful_no';
   const countEl = document.getElementById(type === 'yes' ? 'helpfulYes' : 'helpfulNo');
-  const current = parseInt((countEl && countEl.textContent) || '0', 10) || 0;
-  try{
-    const {data: p} = await supa.from('posts').select(col).eq('id', postId).single();
-    const newVal = ((p && p[col]) || 0) + 1;
-    await supa.from('posts').update({[col]: newVal}).eq('id', postId);
-    if(countEl) countEl.textContent = newVal;
-  }catch(err){
-    if(countEl) countEl.textContent = current + 1; // optimistic fallback if columns are missing
+  const {data: p, error: selErr} = await supa.from('posts').select(col).eq('id', postId).single();
+  if(selErr){
+    toast(`⚠️ "Was this helpful" needs columns first. Run once in Supabase SQL editor: ALTER TABLE posts ADD COLUMN helpful_yes integer DEFAULT 0, ADD COLUMN helpful_no integer DEFAULT 0;`, 'err');
+    return;
   }
+  const newVal = ((p && p[col]) || 0) + 1;
+  const {error: updErr} = await supa.from('posts').update({[col]: newVal}).eq('id', postId);
+  if(updErr){ toast('❌ Failed to save vote: ' + updErr.message, 'err'); return; }
+  if(countEl) countEl.textContent = newVal;
   votes[postId] = type;
   localStorage.setItem(HELPFUL_KEY, JSON.stringify(votes));
   restoreHelpfulVoteState(postId);
@@ -3922,17 +3928,23 @@ async function likePost(postId){
   if(getLikedPosts().includes(postId)){ toast('You already liked this article from this device 👍', 'info'); return; }
   const btn = document.getElementById('postLikeBtn');
   const countEl = document.getElementById('postLikeCount');
-  const current = parseInt((countEl && countEl.textContent) || '0', 10) || 0;
-  try{
-    const {data: p} = await supa.from('posts').select('likes').eq('id', postId).single();
-    const newVal = ((p && p.likes) || 0) + 1;
-    await supa.from('posts').update({likes: newVal}).eq('id', postId);
-    if(countEl) countEl.textContent = newVal;
-  }catch(err){
-    if(countEl) countEl.textContent = current + 1; // optimistic fallback if the "likes" column doesn't exist yet
+  if(btn) btn.disabled = true;
+  const {data: p, error: selErr} = await supa.from('posts').select('likes').eq('id', postId).single();
+  if(selErr){
+    if(btn) btn.disabled = false;
+    toast('⚠️ Likes need a column first. Run once in Supabase SQL editor: ALTER TABLE posts ADD COLUMN likes integer DEFAULT 0;', 'err');
+    return;
   }
+  const newVal = ((p && p.likes) || 0) + 1;
+  const {error: updErr} = await supa.from('posts').update({likes: newVal}).eq('id', postId);
+  if(updErr){
+    if(btn) btn.disabled = false;
+    toast('❌ Failed to save like: ' + updErr.message, 'err');
+    return;
+  }
+  if(countEl) countEl.textContent = newVal;
   markPostLiked(postId);
-  if(btn){ btn.classList.add('liked'); btn.disabled = true; }
+  if(btn) btn.classList.add('liked');
   toast('Liked! Thanks for the feedback ❤️', 'ok');
 }
 function restorePostLikeState(postId){
