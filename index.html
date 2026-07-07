@@ -3,9 +3,62 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ah Stack | Tech Blog & Platform</title>
+<title>Ah Stack | المهندس أحمد حسن - Tech Blog & Platform</title>
 <link rel="icon" type="image/x-icon" href="1.png">
-<meta name="description" content="Ah Stack - Articles, insights, and roadmaps about technology, DevOps, and programming.">
+<link rel="canonical" href="https://engahmedhassan.vercel.app/">
+<meta name="description" content="Ah Stack - المدونة التقنية للمهندس أحمد حسن. مقالات وشروحات ومسارات تعلم في البرمجة، DevOps، تطوير الويب والذكاء الاصطناعي.">
+<meta name="keywords" content="Ah Stack, المهندس أحمد حسن, Ahmed Hassan, احمد حسن, اح ستاك, مدونة أحمد حسن, مدونة تقنية, مدونة برمجة عربية, تعلم البرمجة, DevOps بالعربي, تطوير الويب, مطور ويب, مهندس برمجيات, مسارات تعلم تقنية, Roadmaps, Tech Blog Arabic, Ahmed Hassan Engineer, Ahmed Hassan Developer, Ah Stack Blog, برمجة عربي, شروحات برمجة">
+<meta name="author" content="Ahmed Hassan | المهندس أحمد حسن">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<meta name="theme-color" content="#ef4444">
+
+<!-- Open Graph / Facebook / LinkedIn -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ah Stack">
+<meta property="og:title" content="Ah Stack | المهندس أحمد حسن - Tech Blog & Platform">
+<meta property="og:description" content="المدونة التقنية للمهندس أحمد حسن - مقالات وشروحات ومسارات تعلم في البرمجة، DevOps، وتطوير الويب.">
+<meta property="og:url" content="https://engahmedhassan.vercel.app/">
+<meta property="og:image" content="https://engahmedhassan.vercel.app/1.png">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:locale:alternate" content="en_US">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ah Stack | المهندس أحمد حسن">
+<meta name="twitter:description" content="مدونة تقنية عربية للمهندس أحمد حسن - برمجة، DevOps، وتطوير الويب.">
+<meta name="twitter:image" content="https://engahmedhassan.vercel.app/1.png">
+
+<!-- Structured Data (SEO rich results) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Ah Stack",
+  "alternateName": ["المهندس أحمد حسن", "Ah Stack Blog", "مدونة أحمد حسن"],
+  "url": "https://engahmedhassan.vercel.app/",
+  "description": "المدونة التقنية للمهندس أحمد حسن - مقالات وشروحات ومسارات تعلم في البرمجة، DevOps، وتطوير الويب.",
+  "inLanguage": ["ar", "en"],
+  "author": { "@id": "https://engahmedhassan.vercel.app/#person" },
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://engahmedhassan.vercel.app/?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": "https://engahmedhassan.vercel.app/#person",
+  "name": "Ahmed Hassan",
+  "alternateName": "المهندس أحمد حسن",
+  "url": "https://engahmedhassan.vercel.app/",
+  "jobTitle": "Software Engineer",
+  "worksFor": { "@type": "Organization", "name": "Ah Stack" },
+  "sameAs": []
+}
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -1821,26 +1874,23 @@ function toggleReplyForm(commentId){
 }
 
 async function likeComment(commentId, postId){
-  if(getLikedComments().includes(commentId)) return;
+  if(getLikedComments().includes(commentId)){ toast('لقد أعجبت بهذا التعليق بالفعل من هذا الجهاز 👍', 'info'); return; }
   const countEl = document.getElementById('likeCount-' + commentId);
   const btn = countEl ? countEl.closest('.comment-like-btn') : null;
   if(btn) btn.disabled = true;
-  const {data: c, error: selErr} = await supa.from('comments').select('likes').eq('id', commentId).single();
-  if(selErr){
+  // Atomic server-side increment via RPC — bypasses the silent-fail issue where a
+  // plain select-then-update gets blocked by RLS on anonymous UPDATE and returns
+  // "success" with 0 rows actually changed. Run the SQL in the setup notes once.
+  const {data: newVal, error: rpcErr} = await supa.rpc('increment_comment_likes', {c_id: commentId});
+  if(rpcErr){
     if(btn) btn.disabled = false;
-    toast('⚠️ Comment likes need a column first. Run once in Supabase SQL editor: ALTER TABLE comments ADD COLUMN likes integer DEFAULT 0;', 'err');
-    return;
-  }
-  const newVal = ((c && c.likes) || 0) + 1;
-  const {error: updErr} = await supa.from('comments').update({likes: newVal}).eq('id', commentId);
-  if(updErr){
-    if(btn) btn.disabled = false;
-    toast('❌ Failed to save like: ' + updErr.message, 'err');
+    toast('❌ فشل حفظ الإعجاب: ' + rpcErr.message + ' — تأكد من تنفيذ دالة increment_comment_likes في محرر SQL بسوبابيس.', 'err');
     return;
   }
   if(countEl) countEl.textContent = newVal;
   markCommentLiked(commentId);
   if(btn){ btn.classList.add('liked'); btn.disabled = true; }
+  toast('تم الإعجاب بالتعليق 👍', 'ok');
 }
 
 async function submitComment(postId, parentId){
@@ -3925,27 +3975,27 @@ function markPostLiked(postId){
   localStorage.setItem(POST_LIKES_KEY, JSON.stringify(liked));
 }
 async function likePost(postId){
-  if(getLikedPosts().includes(postId)){ toast('You already liked this article from this device 👍', 'info'); return; }
+  if(getLikedPosts().includes(postId)){ toast('لقد أعجبت بهذا المقال بالفعل من هذا الجهاز 👍', 'info'); return; }
   const btn = document.getElementById('postLikeBtn');
   const countEl = document.getElementById('postLikeCount');
   if(btn) btn.disabled = true;
-  const {data: p, error: selErr} = await supa.from('posts').select('likes').eq('id', postId).single();
-  if(selErr){
+  // Atomic server-side increment via RPC — a plain select-then-update can silently
+  // "succeed" while updating 0 rows if RLS blocks anonymous UPDATE on posts, which
+  // was the root cause of likes never actually being saved. The RPC function runs
+  // with SECURITY DEFINER so it always applies the increment. Run the SQL once
+  // (see setup notes) to create it in Supabase.
+  const {data: newVal, error: rpcErr} = await supa.rpc('increment_post_likes', {p_id: postId});
+  if(rpcErr){
     if(btn) btn.disabled = false;
-    toast('⚠️ Likes need a column first. Run once in Supabase SQL editor: ALTER TABLE posts ADD COLUMN likes integer DEFAULT 0;', 'err');
-    return;
-  }
-  const newVal = ((p && p.likes) || 0) + 1;
-  const {error: updErr} = await supa.from('posts').update({likes: newVal}).eq('id', postId);
-  if(updErr){
-    if(btn) btn.disabled = false;
-    toast('❌ Failed to save like: ' + updErr.message, 'err');
+    toast('❌ فشل حفظ الإعجاب: ' + rpcErr.message + ' — تأكد من تنفيذ دالة increment_post_likes في محرر SQL بسوبابيس.', 'err');
     return;
   }
   if(countEl) countEl.textContent = newVal;
+  const cached = postsCache.find(x => x.id === postId);
+  if(cached) cached.likes = newVal;
   markPostLiked(postId);
   if(btn) btn.classList.add('liked');
-  toast('Liked! Thanks for the feedback ❤️', 'ok');
+  toast('تم الإعجاب! شكراً لتفاعلك ❤️', 'ok');
 }
 function restorePostLikeState(postId){
   const btn = document.getElementById('postLikeBtn');
