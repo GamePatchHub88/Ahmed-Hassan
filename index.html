@@ -312,7 +312,7 @@ main{max-width:1100px; margin:0 auto; padding:20px}
 .post-card:hover{transform:translateY(-4px); border-color:var(--accent); box-shadow: var(--shadow-md);}
 .post-cover{
   height:160px; background:var(--bg-soft); border-bottom: 1px solid var(--border);
-  display:flex; align-items:center; justify-content:center; overflow:hidden;
+  display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;
 }
 .post-cover img{width:100%; height:100%; object-fit:cover}
 .post-cover .fallback{font-size:36px}
@@ -448,6 +448,51 @@ body.focus-mode .share-row, body.focus-mode .comments-section, body.focus-mode #
 body.focus-mode .scroll-top-btn{ display:none !important; }
 body.focus-mode .post-view{max-width:640px; padding-top:20px}
 body.focus-mode .post-content{font-size:19px; line-height:1.9}
+
+/* ===== ✨ Featured Style — distinct, toggle-able magazine formatting for a post ===== */
+.featured-badge{
+  display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:800;
+  padding:5px 12px; border-radius:20px; margin-bottom:14px;
+  background:linear-gradient(120deg, var(--accent), var(--accent-hover)); color:#fff;
+  box-shadow:0 4px 12px -4px rgba(var(--accent-rgb),0.6);
+}
+.featured-badge.card-badge{ position:absolute; top:10px; left:10px; margin:0; }
+h1.featured-title{
+  background:linear-gradient(120deg, var(--text) 30%, var(--accent));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.post-content.featured-style{ font-size:18.5px; }
+.post-content.featured-style > p:first-of-type::first-letter{
+  font-family:'JetBrains Mono', monospace; font-weight:800; color:var(--accent);
+  float:left; font-size:64px; line-height:0.82; padding:6px 10px 0 0;
+}
+.post-content.featured-style h2, .post-content.featured-style h3{
+  position:relative; padding-left:16px;
+}
+.post-content.featured-style h2::before, .post-content.featured-style h3::before{
+  content:''; position:absolute; left:0; top:4px; bottom:4px; width:4px;
+  background:linear-gradient(var(--accent), var(--accent-hover)); border-radius:4px;
+}
+.post-content.featured-style blockquote{
+  background:var(--bg-soft); border-left:4px solid var(--accent); border-radius:0 10px 10px 0;
+  padding:14px 20px; font-size:19px;
+}
+
+/* ===== Image resize toolbar for the article editor ===== */
+.editor-area img{ cursor:pointer; }
+.editor-area img.img-selected{ outline:2px solid var(--accent); outline-offset:2px; }
+.img-size-toolbar{
+  position:absolute; z-index:60; display:flex; gap:4px; background:var(--card);
+  border:1px solid var(--border); border-radius:8px; padding:6px; box-shadow:var(--shadow-md);
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+.img-size-toolbar button{
+  border:1px solid var(--border); background:var(--bg-soft); color:var(--text);
+  font-size:12px; font-weight:600; padding:5px 9px; border-radius:6px; cursor:pointer;
+}
+.img-size-toolbar button:hover{border-color:var(--accent); color:var(--accent);}
+.img-size-toolbar button.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+.img-size-toolbar .remove-img{color:var(--accent); font-weight:800;}
 body.focus-mode .back-btn{position:fixed; top:16px; left:16px; background:var(--card); border:1px solid var(--border); padding:8px 14px; border-radius:8px; box-shadow:var(--shadow); z-index:60}
 
 /* ===== Listen (Text-to-Speech) ===== */
@@ -849,7 +894,7 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
     <div class="nav-wrap">
       <a href="#/" class="brand" id="brandLink">
         <div class="logo-box" id="logoBox"><span id="logoTypeTarget">Ah<span>_Stack</span></span></div>
-        <img src="" alt="logo" class="logo-image" id="logoImage">
+        <img alt="logo" class="logo-image" id="logoImage">
       </a>
       <button class="burger" id="burgerBtn">☰</button>
       <nav class="links" id="navLinks">
@@ -1189,6 +1234,10 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
             <input type="checkbox" id="postPublished" checked style="width:auto">
             Publish immediately (uncheck to save as draft)
           </label>
+          <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:var(--text); cursor:pointer; background:rgba(var(--accent-rgb),0.08); border:1px dashed var(--accent); border-radius:8px; padding:10px 12px">
+            <input type="checkbox" id="postFeaturedStyle" style="width:auto">
+            ✨ تفعيل التنسيق المميز للمقال (Featured Style — drop cap + عنوان متدرج اللون + شارة مميزة)
+          </label>
 
           <label style="font-size:13px; color:var(--text-dim); margin-top:4px; font-weight:600">Rich Post Engine Content Body</label>
           <div class="editor-wrap">
@@ -1392,7 +1441,7 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
         <h3 style="margin-bottom:14px">🖼️ Site Branding / Logo</h3>
         <p style="color:var(--text-dim); font-size:13px; margin-bottom:14px">Upload a custom logo image to replace the default text logo across the site header. Leave empty to keep the default animated text logo.</p>
         <div id="brandLogoPreviewWrap" style="display:flex; align-items:center; gap:14px; margin-bottom:14px">
-          <img id="brandLogoPreview" src="" alt="" style="display:none; height:48px; max-width:180px; object-fit:contain; border:1px solid var(--border); border-radius:8px; padding:4px; background:#fff">
+          <img id="brandLogoPreview" alt="" style="display:none; height:48px; max-width:180px; object-fit:contain; border:1px solid var(--border); border-radius:8px; padding:4px; background:#fff">
           <span id="brandLogoEmptyNote" style="font-size:13px; color:var(--text-dim)">No custom logo set — using default text logo.</span>
         </div>
         <div class="row-actions">
@@ -1527,6 +1576,7 @@ function renderPostsGrid(sectionId){
     <div class="post-card" onclick="location.hash='#/post/${p.id}'">
       <div class="post-cover">
         ${p.cover_url ? `<img src="${esc(p.cover_url)}" alt="">` : `<span class="fallback">📝</span>`}
+        ${p.featured_style ? `<span class="featured-badge card-badge">✨ Featured</span>` : ''}
       </div>
       <div class="post-body">
         <span class="post-tag">${sec ? esc(sec.name) : 'General'}</span>
@@ -1559,7 +1609,8 @@ async function showPost(id){
   document.getElementById('postDetail').innerHTML = `
     <div class="reading-progress" id="readingProgress"></div>
     ${p.cover_url ? `<div class="cover"><img src="${esc(p.cover_url)}"></div>` : ''}
-    <h1>${esc(p.title)}</h1>
+    ${p.featured_style ? `<span class="featured-badge">✨ Featured</span>` : ''}
+    <h1 class="${p.featured_style ? 'featured-title' : ''}">${esc(p.title)}</h1>
     <div class="meta">
       <span style="color:var(--accent); font-weight:600">${sec ? esc(sec.name) : 'General'}</span> · ${fmtDate(p.created_at)}
       · 📖 ${readMins} min read · 👁️ <span id="postViewCount">${p.views || 0}</span> views
@@ -1569,7 +1620,7 @@ async function showPost(id){
     </div>
     ${tags.length ? `<div class="tag-chips">${tags.map(t => `<span class="tag-chip" onclick="filterByTag('${esc(t).replace(/'/g,"\\'")}')">#${esc(t)}</span>`).join('')}</div>` : ''}
     <div id="tocBox"></div>
-    <div class="post-content" id="postContentBody">${p.content}</div>
+    <div class="post-content ${p.featured_style ? 'featured-style' : ''}" id="postContentBody">${p.content}</div>
     <div class="helpful-box">
       <button class="like-btn" id="postLikeBtn" onclick="likePost('${p.id}')"><span class="like-heart">❤️</span> Like (<span id="postLikeCount">${p.likes || 0}</span>)</button>
       <span>Was this article helpful?</span>
@@ -2679,8 +2730,63 @@ function insertLink(){
 
 function insertImageByUrl(){
   const url = prompt('Provide Target Image Asset Asset Source (URL):');
-  if(url) fmt('insertImage', url);
+  if(url) insertSizableImage(url);
 }
+
+/* Insert an image with a sane default size (50%) and centered layout instead of the
+   browser default full-width dump — this is what was making articles look "bad". */
+function insertSizableImage(url){
+  const editor = document.getElementById('postContent');
+  editor.focus();
+  document.execCommand('insertHTML', false, `<img src="${url.replace(/"/g,'&quot;')}" style="width:50%; height:auto; display:block; margin:16px auto; border-radius:8px;">`);
+}
+
+/* ================== IMAGE RESIZE TOOLBAR (click an image in the editor to resize it) ================== */
+let _imgToolbarTarget = null;
+function closeImgSizeToolbar(){
+  const bar = document.getElementById('imgSizeToolbar');
+  if(bar) bar.remove();
+  if(_imgToolbarTarget) _imgToolbarTarget.classList.remove('img-selected');
+  _imgToolbarTarget = null;
+}
+function setImgSize(pct){
+  if(!_imgToolbarTarget) return;
+  if(pct === 'auto'){ _imgToolbarTarget.style.width = ''; }
+  else{ _imgToolbarTarget.style.width = pct + '%'; }
+  _imgToolbarTarget.style.height = 'auto';
+  _imgToolbarTarget.style.display = 'block';
+  _imgToolbarTarget.style.margin = '16px auto';
+  openImgSizeToolbar(_imgToolbarTarget); // refresh active state
+}
+function removeSelectedImg(){
+  if(_imgToolbarTarget) _imgToolbarTarget.remove();
+  closeImgSizeToolbar();
+}
+function openImgSizeToolbar(img){
+  closeImgSizeToolbar();
+  _imgToolbarTarget = img;
+  img.classList.add('img-selected');
+  const sizes = [25, 50, 75, 100];
+  const current = parseInt(img.style.width) || null;
+  const bar = document.createElement('div');
+  bar.className = 'img-size-toolbar';
+  bar.id = 'imgSizeToolbar';
+  bar.innerHTML = sizes.map(s => `<button type="button" class="${current === s ? 'active' : ''}" onclick="setImgSize(${s})">${s}%</button>`).join('')
+    + `<button type="button" class="${!current ? 'active' : ''}" onclick="setImgSize('auto')">Original</button>`
+    + `<button type="button" class="remove-img" onclick="removeSelectedImg()">🗑️</button>`;
+  document.body.appendChild(bar);
+  const rect = img.getBoundingClientRect();
+  bar.style.top = (window.scrollY + rect.top - bar.offsetHeight - 10) + 'px';
+  bar.style.left = (window.scrollX + rect.left) + 'px';
+}
+document.getElementById('postContent').addEventListener('click', (e) => {
+  if(e.target.tagName === 'IMG'){ e.preventDefault(); openImgSizeToolbar(e.target); }
+  else{ closeImgSizeToolbar(); }
+});
+document.addEventListener('scroll', () => { if(_imgToolbarTarget) closeImgSizeToolbar(); }, true);
+document.addEventListener('click', (e) => {
+  if(_imgToolbarTarget && !e.target.closest('.img-size-toolbar') && e.target.tagName !== 'IMG') closeImgSizeToolbar();
+});
 
 const STORAGE_BUCKET = 'post-images';
 
@@ -2700,8 +2806,7 @@ async function uploadContentImage(e){
   statusEl.textContent = '⏳ Streaming binary cloud stream pipeline...';
   try{
     const url = await uploadFileToStorage(file);
-    document.getElementById('postContent').focus();
-    document.execCommand('insertImage', false, url);
+    insertSizableImage(url);
     statusEl.textContent = '✅ Cloud sync verified successfully.';
   }catch(err){
     statusEl.textContent = '❌ Sink asset failure pipeline: ' + err.message;
@@ -2772,6 +2877,7 @@ async function editPost(id){
   document.getElementById('postExcerpt').value = p.excerpt || '';
   document.getElementById('postTags').value = Array.isArray(p.tags) ? p.tags.join(', ') : '';
   document.getElementById('postPublished').checked = p.published !== false;
+  document.getElementById('postFeaturedStyle').checked = !!p.featured_style;
   document.getElementById('postContent').innerHTML = p.content || '';
   window.scrollTo(0,0);
 }
@@ -2825,6 +2931,7 @@ function resetPostForm(){
   document.getElementById('postExcerpt').value = '';
   document.getElementById('postTags').value = '';
   document.getElementById('postPublished').checked = true;
+  document.getElementById('postFeaturedStyle').checked = false;
   document.getElementById('postContent').innerHTML = '';
 }
 
@@ -2837,17 +2944,21 @@ async function savePost(){
   const tagsRaw = document.getElementById('postTags').value.trim();
   const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : [];
   const published = document.getElementById('postPublished').checked;
+  const featured_style = document.getElementById('postFeaturedStyle').checked;
   const content = document.getElementById('postContent').innerHTML.trim();
 
   if(!title || !content){ toast('Title parameters and deployment content parameters are strictly required.'); return; }
 
   const payload = {title, section_id, cover_url, excerpt, content, published};
+  const payloadFull = {...payload, tags, featured_style};
   let error;
   if(id){
-    ({error} = await supa.from('posts').update({...payload, tags}).eq('id', id));
+    ({error} = await supa.from('posts').update(payloadFull).eq('id', id));
+    if(error) ({error} = await supa.from('posts').update({...payload, tags}).eq('id', id));
     if(error) ({error} = await supa.from('posts').update(payload).eq('id', id));
   } else {
-    ({error} = await supa.from('posts').insert({...payload, tags}));
+    ({error} = await supa.from('posts').insert(payloadFull));
+    if(error) ({error} = await supa.from('posts').insert({...payload, tags}));
     if(error) ({error} = await supa.from('posts').insert(payload));
   }
   if(error){ toast('Fault event failure logic: ' + error.message); return; }
@@ -3605,11 +3716,11 @@ function applySiteLogo(url){
     if(avatarCircle) avatarCircle.innerHTML = `<img src="${esc(url)}" alt="logo">`;
   } else {
     img.style.display = 'none';
-    img.src = '';
+    img.removeAttribute('src');
     box.style.display = 'inline-flex';
     const target = document.getElementById('logoTypeTarget');
     if(target) target.innerHTML = 'Ah<span>_Stack</span>';
-    if(preview){ preview.style.display = 'none'; preview.src = ''; }
+    if(preview){ preview.style.display = 'none'; preview.removeAttribute('src'); }
     if(emptyNote) emptyNote.style.display = 'inline';
     if(avatarCircle) avatarCircle.innerHTML = '<span id="avatarCircleText">Ah</span>';
   }
@@ -3730,14 +3841,27 @@ function toast(message, type){
 }
 
 /* ================== OFFLINE / ONLINE DETECTION ================== */
+// Running the site directly from file:// (double-clicking the .html file) makes fetch() to any
+// remote URL fail due to the browser's own file:// security sandboxing — that failure is NOT a
+// real connectivity problem, so on file:// we simply trust the browser's online/offline events
+// and skip the network probe entirely to avoid false "you're offline" warnings.
+const IS_FILE_PROTOCOL = location.protocol === 'file:';
 function updateOnlineStatus(){
   const banner = document.getElementById('offlineBanner');
   if(!banner) return;
-  if(navigator.onLine){ banner.classList.remove('show'); }
-  else{ banner.classList.add('show'); }
+  if(IS_FILE_PROTOCOL){
+    // Supabase read/write calls will reveal a real connectivity problem on their own (via toast
+    // error messages), so we don't show a standalone banner in this mode.
+    banner.classList.remove('show');
+    return;
+  }
+  banner.classList.toggle('show', navigator.onLine === false);
 }
 window.addEventListener('online', () => { updateOnlineStatus(); toast('Back online ✅', 'ok'); });
-window.addEventListener('offline', () => { updateOnlineStatus(); toast('You are offline — some actions are disabled.', 'err'); });
+window.addEventListener('offline', () => {
+  updateOnlineStatus();
+  if(!IS_FILE_PROTOCOL) toast('You are offline — some actions are disabled.', 'err');
+});
 
 /* ================== COMMAND PALETTE (Ctrl+K / "/") ================== */
 function openCmdk(){
