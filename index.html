@@ -3128,7 +3128,7 @@
       <div class="ai-chat-panel" id="aiChatPanel">
         <div class="ai-chat-header">
           <span>🤖 اسأل المدونة</span>
-          <button class="icon-btn" onclick="toggleAIChat()">✕</button>
+          <button class="icon-btn" onclick="closeAIChat()">✕</button>
         </div>
         <div class="ai-chat-messages" id="aiChatMessages"></div>
         <div class="ai-chat-input-row">
@@ -8304,16 +8304,44 @@
 
       /* ================== AI CHATBOT (local, free — asks the blog's own content) ================== */
       let aiChatHistory = [];
-      function toggleAIChat() {
+      // openAIChat / closeAIChat are explicit (not a toggle), so the ✕ button
+      // and the fab button can never fight each other or get "stuck open".
+      function openAIChat() {
         const panel = document.getElementById("aiChatPanel");
-        panel.classList.toggle("open");
-        if (panel.classList.contains("open") && !aiChatHistory.length) {
+        if (!panel) return;
+        panel.classList.add("open");
+        if (!aiChatHistory.length) {
           appendAIChatBubble(
             "assistant",
             "أهلاً 👋 أنا مساعد Ah Stack، يعمل بالكامل داخل متصفحك بدون أي اتصال خارجي أو تكلفة. اسألني عن أي موضوع تقني نُشر في المدونة وسأبحث لك في المقالات المتاحة.",
           );
         }
       }
+      function closeAIChat() {
+        const panel = document.getElementById("aiChatPanel");
+        if (panel) panel.classList.remove("open");
+      }
+      function toggleAIChat() {
+        const panel = document.getElementById("aiChatPanel");
+        if (!panel) return;
+        if (panel.classList.contains("open")) closeAIChat();
+        else openAIChat();
+      }
+      // Hard safeguard: force the widget closed the instant the page loads,
+      // no matter what markup/cache state it starts from.
+      document.addEventListener("DOMContentLoaded", closeAIChat);
+      closeAIChat();
+      // Extra safety nets: Escape key, and clicking outside the panel, both close it.
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeAIChat();
+      });
+      document.addEventListener("click", (e) => {
+        const panel = document.getElementById("aiChatPanel");
+        const fab = document.getElementById("aiChatFab");
+        if (!panel || !panel.classList.contains("open")) return;
+        if (panel.contains(e.target) || (fab && fab.contains(e.target))) return;
+        closeAIChat();
+      });
       function appendAIChatBubble(role, text) {
         const list = document.getElementById("aiChatMessages");
         const bubble = document.createElement("div");
