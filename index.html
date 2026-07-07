@@ -8331,6 +8331,12 @@
       // no matter what markup/cache state it starts from.
       document.addEventListener("DOMContentLoaded", closeAIChat);
       closeAIChat();
+      // Extra safeguard: some browsers (especially mobile Safari) restore a
+      // page from the "back/forward cache" (bfcache) exactly as it was left
+      // — including an open chat panel — WITHOUT re-running the normal
+      // page-load code above. "pageshow" fires in that case too, so we force
+      // the panel closed there as well.
+      window.addEventListener("pageshow", closeAIChat);
       // Extra safety nets: Escape key, and clicking outside the panel, both close it.
       document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") closeAIChat();
