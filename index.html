@@ -334,6 +334,64 @@ html[data-theme="dark"] .share-x:hover{color:#fff; border-color:#fff}
 .comment-card{cursor:default}
 .comment-card:hover{transform:none}
 
+/* ===== Tag Chips ===== */
+.tag-chips{display:flex; gap:8px; flex-wrap:wrap; margin:-10px 0 20px}
+.tag-chip{
+  font-size:12px; font-weight:600; color:var(--text-dim); background:var(--bg-soft);
+  border:1px solid var(--border); border-radius:20px; padding:5px 12px; cursor:pointer; transition:.15s;
+}
+.tag-chip:hover{color:var(--accent); border-color:var(--accent)}
+
+/* ===== Helpful Vote Box ===== */
+.helpful-box{
+  display:flex; align-items:center; gap:12px; margin-top:34px; padding:16px 20px;
+  background:var(--bg-soft); border:1px solid var(--border); border-radius:10px; font-size:14px; font-weight:600;
+}
+.helpful-box button.voted{color:var(--accent); border-color:rgba(239,68,68,0.35)}
+.helpful-box button:disabled{opacity:.6; cursor:default}
+
+/* ===== Comment threading, likes, sort ===== */
+.comments-head-row{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px}
+.comments-head-row .comments-head{margin-bottom:0}
+.comment-sort{
+  background:var(--card); border:1px solid var(--border); color:var(--text);
+  padding:8px 12px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer;
+}
+.comment-actions{display:flex; gap:14px; margin-top:10px}
+.comment-like-btn, .comment-reply-btn{
+  background:none; border:none; color:var(--text-dim); font-size:13px; font-weight:600; cursor:pointer; padding:0; transition:.15s;
+}
+.comment-like-btn:hover, .comment-reply-btn:hover{color:var(--accent)}
+.comment-like-btn.liked{color:var(--accent)}
+.comment-replies{margin-top:14px; padding-left:18px; border-left:2px solid var(--border); display:flex; flex-direction:column; gap:12px}
+.comment-reply-form{
+  display:none; flex-direction:column; gap:8px; margin-top:12px; background:var(--bg-soft); border:1px solid var(--border);
+  border-radius:8px; padding:12px;
+}
+.comment-reply-form.show{display:flex}
+.comment-reply-form input, .comment-reply-form textarea{
+  background:var(--card); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:6px; font-size:13px; font-family:inherit;
+}
+.comment-reply-form textarea{min-height:60px; resize:vertical}
+.comment-reply-form .row-actions{display:flex; gap:8px}
+
+/* ===== Focus / Reading Mode ===== */
+body.focus-mode header, body.focus-mode footer, body.focus-mode .newsletter-section,
+body.focus-mode .share-row, body.focus-mode .comments-section, body.focus-mode #relatedArticles,
+body.focus-mode .scroll-top-btn{ display:none !important; }
+body.focus-mode .post-view{max-width:640px; padding-top:20px}
+body.focus-mode .post-content{font-size:19px; line-height:1.9}
+body.focus-mode .back-btn{position:fixed; top:16px; left:16px; background:var(--card); border:1px solid var(--border); padding:8px 14px; border-radius:8px; box-shadow:var(--shadow); z-index:60}
+
+/* ===== Listen (Text-to-Speech) ===== */
+#listenBtn.playing{color:var(--accent); border-color:rgba(239,68,68,0.35)}
+
+/* ===== Saved Articles Page (nav link) ===== */
+.saved-count-dot{
+  background:var(--accent); color:#fff; font-size:10px; font-weight:800; border-radius:10px;
+  padding:1px 6px; margin-left:4px;
+}
+
 /* ===== Trending Section ===== */
 .trending-section{max-width:1100px; margin:10px auto 0; padding:0 20px}
 .trending-section h2{font-size:20px; font-weight:800; margin-bottom:14px; display:flex; align-items:center; gap:8px}
@@ -734,6 +792,7 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
         <a href="#/courses" class="nav-link" data-view="courses">Courses</a>
         <a href="#/questions" class="nav-link" data-view="questions">Questions</a>
         <a href="#/progress" class="nav-link" data-view="progress">🏆 <span id="navPointsCount">0</span> pts</a>
+        <a href="#/saved" class="nav-link" data-view="saved">🔖 Saved<span class="saved-count-dot" id="savedCountDot" style="display:none">0</span></a>
         <a href="#/contact" class="nav-link" data-view="contact">Contact</a>
         <button class="theme-toggle" id="themeToggleBtn" title="Toggle dark mode" onclick="toggleTheme()">🌙</button>
       </nav>
@@ -872,6 +931,22 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
     <div class="gm-stats-grid" id="gmStatsGrid"></div>
     <div class="gm-badges-head">🎖️ Badges</div>
     <div class="gm-badges-grid" id="gmBadgesGrid"></div>
+  </div>
+
+  <div id="view-saved" style="display:none">
+    <div class="section-banner">
+      <div class="crumb"><a onclick="location.hash='#/'">Home</a> <span>→</span> <span>Saved Articles</span></div>
+      <div class="section-hero">
+        <div class="icon">🔖</div>
+        <div>
+          <h1>Saved for Later</h1>
+          <p>Articles you bookmarked on this device — stored locally in your browser.</p>
+        </div>
+      </div>
+    </div>
+    <div class="section-list" id="savedPostsList">
+      <div class="empty-state">You haven't saved any articles yet.</div>
+    </div>
   </div>
 
   <div id="view-questions" style="display:none">
@@ -1033,6 +1108,7 @@ th{color:var(--text-dim); font-weight:600; background: var(--bg-soft);}
             <input type="file" id="coverUploadInput" accept="image/*" style="display:none" onchange="uploadCoverImage(event)">
           </div>
           <textarea id="postExcerpt" placeholder="Short description metadata snippet for listings" style="min-height:80px"></textarea>
+          <input type="text" id="postTags" placeholder="Tags, comma-separated (e.g. docker, kubernetes, ci-cd)">
           <label style="display:flex; align-items:center; gap:8px; font-size:14px; color:var(--text); cursor:pointer">
             <input type="checkbox" id="postPublished" checked style="width:auto">
             Publish immediately (uncheck to save as draft)
@@ -1355,11 +1431,12 @@ function renderPostsGrid(sectionId){
     list = postsCache.filter(p => p.section_id === sectionId);
   }
   
-  // Real-time keyword filter across Title and Excerpt
+  // Real-time keyword filter across Title, Excerpt, and Tags
   if(currentSearchQuery) {
     list = list.filter(p => 
       p.title.toLowerCase().includes(currentSearchQuery) || 
-      (p.excerpt && p.excerpt.toLowerCase().includes(currentSearchQuery))
+      (p.excerpt && p.excerpt.toLowerCase().includes(currentSearchQuery)) ||
+      (Array.isArray(p.tags) && p.tags.some(t => t.toLowerCase().includes(currentSearchQuery)))
     );
   }
   
@@ -1369,6 +1446,7 @@ function renderPostsGrid(sectionId){
   }
   grid.innerHTML = list.map(p => {
     const sec = sectionsCache.find(s => s.id === p.section_id);
+    const tags = Array.isArray(p.tags) ? p.tags.slice(0, 3) : [];
     return `
     <div class="post-card" onclick="location.hash='#/post/${p.id}'">
       <div class="post-cover">
@@ -1378,6 +1456,7 @@ function renderPostsGrid(sectionId){
         <span class="post-tag">${sec ? esc(sec.name) : 'General'}</span>
         <div class="post-title">${esc(p.title)}</div>
         <div class="post-excerpt">${esc(p.excerpt || '')}</div>
+        ${tags.length ? `<div class="tag-chips" style="margin:0">${tags.map(t => `<span class="tag-chip" onclick="event.stopPropagation(); filterByTag('${esc(t).replace(/'/g,"\\'")}')">#${esc(t)}</span>`).join('')}</div>` : ''}
         <div class="post-meta"><span>${fmtDate(p.created_at)}</span><span style="color:var(--accent); font-weight:600">Read Vector →</span></div>
       </div>
     </div>`;
@@ -1399,14 +1478,27 @@ async function showPost(id){
   const sec = sectionsCache.find(s => s.id === p.section_id);
   const wordCount = (p.content || '').replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
   const readMins = Math.max(1, Math.round(wordCount / 200));
+  const isSaved = getBookmarks().includes(p.id);
+  const tags = Array.isArray(p.tags) ? p.tags : [];
   document.getElementById('postDetail').innerHTML = `
+    <div class="reading-progress" id="readingProgress"></div>
     ${p.cover_url ? `<div class="cover"><img src="${esc(p.cover_url)}"></div>` : ''}
     <h1>${esc(p.title)}</h1>
     <div class="meta">
       <span style="color:var(--accent); font-weight:600">${sec ? esc(sec.name) : 'General'}</span> · ${fmtDate(p.created_at)}
       · 📖 ${readMins} min read · 👁️ <span id="postViewCount">${p.views || 0}</span> views
+      <button class="bookmark-btn ${isSaved ? 'saved' : ''}" id="bookmarkBtn" onclick="toggleBookmark('${p.id}')">${isSaved ? '💾 Saved' : '🔖 Save for later'}</button>
+      <button class="icon-btn" id="listenBtn" onclick="toggleListen('${p.id}')" style="margin-left:8px">🔊 Listen</button>
+      <button class="icon-btn" id="focusModeBtn" onclick="toggleFocusMode()" style="margin-left:8px">🧘 Focus Mode</button>
     </div>
-    <div class="post-content">${p.content}</div>
+    ${tags.length ? `<div class="tag-chips">${tags.map(t => `<span class="tag-chip" onclick="filterByTag('${esc(t).replace(/'/g,"\\'")}')">#${esc(t)}</span>`).join('')}</div>` : ''}
+    <div id="tocBox"></div>
+    <div class="post-content" id="postContentBody">${p.content}</div>
+    <div class="helpful-box">
+      <span>Was this article helpful?</span>
+      <button class="icon-btn" id="helpfulYesBtn" onclick="voteHelpful('${p.id}','yes')">👍 <span id="helpfulYes">${p.helpful_yes || 0}</span></button>
+      <button class="icon-btn" id="helpfulNoBtn" onclick="voteHelpful('${p.id}','no')">👎 <span id="helpfulNo">${p.helpful_no || 0}</span></button>
+    </div>
     <div class="share-row">
       <span class="share-label">📢 Share this article:</span>
       <button class="icon-btn share-x" onclick="shareTo('x','${p.id}','${esc(p.title).replace(/'/g,"\\'")}')">𝕏 X</button>
@@ -1416,7 +1508,14 @@ async function showPost(id){
     </div>
     <div id="relatedArticles"></div>
     <div class="comments-section" id="commentsSection">
-      <h3 class="comments-head">💬 Discussion (<span id="commentsCount">0</span>)</h3>
+      <div class="comments-head-row">
+        <h3 class="comments-head">💬 Discussion (<span id="commentsCount">0</span>)</h3>
+        <select class="comment-sort" id="commentSort" onchange="loadComments('${p.id}')">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="top">Top liked</option>
+        </select>
+      </div>
       <form class="comment-form" id="commentForm">
         <div class="row" style="display:flex; gap:10px; flex-wrap:wrap">
           <input type="text" id="commentAuthor" placeholder="Your name (optional)" style="flex:1; min-width:160px">
@@ -1431,8 +1530,14 @@ async function showPost(id){
   `;
   bumpPostViews(p.id, p.views || 0);
   renderRelatedArticles(p, sec);
-  document.getElementById('commentForm').addEventListener('submit', (e) => { e.preventDefault(); submitComment(p.id); });
+  document.getElementById('commentForm').addEventListener('submit', (e) => { e.preventDefault(); submitComment(p.id, null); });
   loadComments(p.id);
+  buildTOC();
+  wireCopyCodeButtons();
+  initReadingProgress();
+  restoreHelpfulVoteState(p.id);
+  _listenState = 'stopped';
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
 }
 
 async function bumpPostViews(id, currentViews){
@@ -1486,51 +1591,121 @@ function shareTo(platform, id, title){
   if(target) window.open(target, '_blank', 'noopener,noreferrer');
 }
 
-/* ================== ARTICLE COMMENTS ================== */
+/* ================== ARTICLE COMMENTS (threaded + likes + sorting) ================== */
+const COMMENT_LIKES_KEY = 'liked_comments_v1';
+function getLikedComments(){
+  try{ return JSON.parse(localStorage.getItem(COMMENT_LIKES_KEY) || '[]'); }catch(e){ return []; }
+}
+function markCommentLiked(commentId){
+  const liked = getLikedComments();
+  liked.push(commentId);
+  localStorage.setItem(COMMENT_LIKES_KEY, JSON.stringify(liked));
+}
+
 async function loadComments(postId){
   const listEl = document.getElementById('commentList');
   const countEl = document.getElementById('commentsCount');
+  const sortEl = document.getElementById('commentSort');
   if(!listEl) return;
   listEl.innerHTML = `<div class="empty-state" style="padding:24px">Loading comments...</div>`;
   try{
-    const {data, error} = await supa.from('comments').select('*').eq('post_id', postId).order('created_at', {ascending:false});
+    const {data, error} = await supa.from('comments').select('*').eq('post_id', postId).order('created_at', {ascending:true});
     if(error) throw error;
-    const comments = data || [];
-    if(countEl) countEl.textContent = comments.length;
-    if(comments.length === 0){
+    const all = data || [];
+    if(countEl) countEl.textContent = all.length;
+    if(all.length === 0){
       listEl.innerHTML = `<div class="empty-state" style="padding:24px">Be the first to comment on this article.</div>`;
       return;
     }
-    listEl.innerHTML = comments.map(c => `
-      <div class="answer-card comment-card">
-        <div class="body">${esc(c.body)}</div>
-        <div class="meta">💬 ${esc(c.author_name || 'Anonymous')} · ${fmtDate(c.created_at)}</div>
-      </div>
-    `).join('');
+    let topLevel = all.filter(c => !c.parent_id);
+    const sortMode = sortEl ? sortEl.value : 'newest';
+    if(sortMode === 'newest') topLevel = topLevel.slice().reverse();
+    else if(sortMode === 'top') topLevel = topLevel.slice().sort((a,b) => (b.likes||0) - (a.likes||0));
+    listEl.innerHTML = topLevel.map(c => renderCommentNode(c, all, postId)).join('');
   }catch(err){
-    listEl.innerHTML = `<div class="empty-state" style="padding:24px">Comments are unavailable right now. (Make sure a "comments" table exists in Supabase with columns: post_id, author_name, email, body, created_at)</div>`;
+    listEl.innerHTML = `<div class="empty-state" style="padding:24px">Comments are unavailable right now. (Make sure a "comments" table exists in Supabase with columns: post_id, parent_id, author_name, email, body, likes, created_at)</div>`;
     if(countEl) countEl.textContent = '0';
   }
 }
 
-async function submitComment(postId){
-  const author_name = document.getElementById('commentAuthor').value.trim();
-  const email = document.getElementById('commentEmail').value.trim();
-  const body = document.getElementById('commentBody').value.trim();
-  const statusEl = document.getElementById('commentStatus');
+function renderCommentNode(c, all, postId){
+  const replies = all.filter(r => r.parent_id === c.id);
+  const liked = getLikedComments().includes(c.id);
+  return `
+    <div class="answer-card comment-card" id="comment-${c.id}">
+      <div class="body">${esc(c.body)}</div>
+      <div class="meta">💬 ${esc(c.author_name || 'Anonymous')} · ${fmtDate(c.created_at)}</div>
+      <div class="comment-actions">
+        <button class="comment-like-btn ${liked ? 'liked' : ''}" onclick="likeComment('${c.id}','${postId}')" ${liked ? 'disabled' : ''}>👍 Like (<span id="likeCount-${c.id}">${c.likes || 0}</span>)</button>
+        <button class="comment-reply-btn" onclick="toggleReplyForm('${c.id}')">↩️ Reply</button>
+      </div>
+      <form class="comment-reply-form" id="replyForm-${c.id}" onsubmit="event.preventDefault(); submitComment('${postId}','${c.id}')">
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <input type="text" id="replyAuthor-${c.id}" placeholder="Your name (optional)" style="flex:1; min-width:140px">
+        </div>
+        <textarea id="replyBody-${c.id}" placeholder="Write a reply..." required></textarea>
+        <div class="row-actions">
+          <button type="submit" class="btn">Post Reply</button>
+          <button type="button" class="btn secondary" onclick="toggleReplyForm('${c.id}')">Cancel</button>
+        </div>
+      </form>
+      ${replies.length ? `<div class="comment-replies">${replies.map(r => renderCommentNode(r, all, postId)).join('')}</div>` : ''}
+    </div>
+  `;
+}
+
+function toggleReplyForm(commentId){
+  const form = document.getElementById('replyForm-' + commentId);
+  if(form) form.classList.toggle('show');
+}
+
+async function likeComment(commentId, postId){
+  if(getLikedComments().includes(commentId)) return;
+  const countEl = document.getElementById('likeCount-' + commentId);
+  const current = parseInt((countEl && countEl.textContent) || '0', 10) || 0;
+  try{
+    const {data: c} = await supa.from('comments').select('likes').eq('id', commentId).single();
+    const newVal = ((c && c.likes) || 0) + 1;
+    await supa.from('comments').update({likes: newVal}).eq('id', commentId);
+    if(countEl) countEl.textContent = newVal;
+  }catch(err){
+    if(countEl) countEl.textContent = current + 1;
+  }
+  markCommentLiked(commentId);
+  const btn = countEl ? countEl.closest('.comment-like-btn') : null;
+  if(btn){ btn.classList.add('liked'); btn.disabled = true; }
+}
+
+async function submitComment(postId, parentId){
+  const isReply = !!parentId;
+  const authorEl = isReply ? document.getElementById('replyAuthor-' + parentId) : document.getElementById('commentAuthor');
+  const bodyEl = isReply ? document.getElementById('replyBody-' + parentId) : document.getElementById('commentBody');
+  const emailEl = isReply ? null : document.getElementById('commentEmail');
+  const statusEl = isReply ? null : document.getElementById('commentStatus');
+  const author_name = authorEl ? authorEl.value.trim() : '';
+  const email = emailEl ? emailEl.value.trim() : '';
+  const body = bodyEl ? bodyEl.value.trim() : '';
   if(!body){ return; }
   try{
-    const {error} = await supa.from('comments').insert({post_id: postId, author_name: author_name || 'Anonymous', email: email || null, body});
+    const payload = {post_id: postId, author_name: author_name || 'Anonymous', email: email || null, body};
+    if(isReply) payload.parent_id = parentId;
+    const {error} = await supa.from('comments').insert(payload);
     if(error) throw error;
-    statusEl.className = 'msg-status ok';
-    statusEl.textContent = '✅ Comment posted!';
-    document.getElementById('commentBody').value = '';
+    if(statusEl){
+      statusEl.className = 'msg-status ok';
+      statusEl.textContent = '✅ Comment posted!';
+      setTimeout(() => { statusEl.textContent=''; statusEl.className='msg-status'; }, 4000);
+    }
+    if(bodyEl) bodyEl.value = '';
     gmAward('comment');
     loadComments(postId);
-    setTimeout(() => { statusEl.textContent=''; statusEl.className='msg-status'; }, 4000);
   }catch(err){
-    statusEl.className = 'msg-status err';
-    statusEl.textContent = '❌ Could not post comment: ' + err.message;
+    if(statusEl){
+      statusEl.className = 'msg-status err';
+      statusEl.textContent = '❌ Could not post comment: ' + err.message;
+    } else {
+      alert('❌ Could not post reply: ' + err.message);
+    }
   }
 }
 
@@ -1561,6 +1736,7 @@ function router(){
   document.getElementById('view-questions').style.display = 'none';
   document.getElementById('view-question').style.display = 'none';
   document.getElementById('view-progress').style.display = 'none';
+  document.getElementById('view-saved').style.display = 'none';
   document.getElementById('view-roadmaps').style.display = 'none';
   document.getElementById('view-roadmap').style.display = 'none';
   document.getElementById('view-courses').style.display = 'none';
@@ -1571,6 +1747,17 @@ function router(){
     const id = hash.replace('#/post/', '');
     document.getElementById('view-post').style.display = 'block';
     showPost(id);
+    window.scrollTo(0,0);
+  } else if(hash.startsWith('#/tag/')){
+    const tag = decodeURIComponent(hash.replace('#/tag/', ''));
+    document.getElementById('view-section').style.display = 'block';
+    renderTagPage(tag);
+    window.scrollTo(0,0);
+  } else if(hash === '#/saved'){
+    document.getElementById('view-saved').style.display = 'block';
+    const link = document.querySelector('.nav-link[data-view="saved"]');
+    if(link) link.classList.add('active');
+    renderSavedPage();
     window.scrollTo(0,0);
   } else if(hash.startsWith('#/section/')){
     const slug = hash.replace('#/section/', '');
@@ -1629,6 +1816,199 @@ function router(){
   document.getElementById('navLinks').classList.remove('open');
 }
 window.addEventListener('hashchange', router);
+
+function filterByTag(tag){
+  location.hash = '#/tag/' + encodeURIComponent(tag);
+}
+
+function renderTagPage(tag){
+  const listEl = document.getElementById('sectionPostsList');
+  document.getElementById('secTitle').textContent = '#' + tag;
+  document.getElementById('secCrumbName').textContent = '#' + tag;
+  document.getElementById('secDesc').textContent = `All articles tagged with "${tag}"`;
+  document.querySelector('.section-hero .icon').textContent = '🏷️';
+  const list = postsCache.filter(p => Array.isArray(p.tags) && p.tags.includes(tag));
+  if(list.length === 0){
+    listEl.innerHTML = `<div class="empty-state">No articles tagged "${esc(tag)}" yet.</div>`;
+    return;
+  }
+  listEl.innerHTML = list.map(p => `
+    <div class="section-post-row" onclick="location.hash='#/post/${p.id}'">
+      <div class="thumb">${p.cover_url ? `<img src="${esc(p.cover_url)}">` : '📝'}</div>
+      <div class="info">
+        <div class="t">${esc(p.title)}</div>
+        <div class="e">${esc(p.excerpt || '')}</div>
+        <div class="d">${fmtDate(p.created_at)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ================== BOOKMARKS / SAVED ARTICLES ================== */
+const BOOKMARKS_KEY = 'bookmarks_v1';
+function getBookmarks(){
+  try{ return JSON.parse(localStorage.getItem(BOOKMARKS_KEY) || '[]'); }catch(e){ return []; }
+}
+function saveBookmarks(list){
+  localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(list));
+  updateSavedCountDot();
+}
+function updateSavedCountDot(){
+  const dot = document.getElementById('savedCountDot');
+  if(!dot) return;
+  const n = getBookmarks().length;
+  dot.style.display = n > 0 ? 'inline-block' : 'none';
+  dot.textContent = n;
+}
+function toggleBookmark(postId){
+  let list = getBookmarks();
+  const btn = document.getElementById('bookmarkBtn');
+  if(list.includes(postId)){
+    list = list.filter(id => id !== postId);
+    if(btn){ btn.classList.remove('saved'); btn.textContent = '🔖 Save for later'; }
+  } else {
+    list.push(postId);
+    if(btn){ btn.classList.add('saved'); btn.textContent = '💾 Saved'; }
+  }
+  saveBookmarks(list);
+}
+function renderSavedPage(){
+  const listEl = document.getElementById('savedPostsList');
+  const ids = getBookmarks();
+  const list = postsCache.filter(p => ids.includes(p.id));
+  if(list.length === 0){
+    listEl.innerHTML = `<div class="empty-state">You haven't saved any articles yet. Open an article and tap "🔖 Save for later".</div>`;
+    return;
+  }
+  listEl.innerHTML = list.map(p => `
+    <div class="section-post-row" onclick="location.hash='#/post/${p.id}'">
+      <div class="thumb">${p.cover_url ? `<img src="${esc(p.cover_url)}">` : '📝'}</div>
+      <div class="info">
+        <div class="t">${esc(p.title)}</div>
+        <div class="e">${esc(p.excerpt || '')}</div>
+        <div class="d">${fmtDate(p.created_at)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ================== TABLE OF CONTENTS, CODE COPY, READING PROGRESS ================== */
+function buildTOC(){
+  const box = document.getElementById('tocBox');
+  const content = document.getElementById('postContentBody');
+  if(!box || !content) return;
+  const headings = content.querySelectorAll('h2, h3');
+  if(headings.length < 2){ box.innerHTML = ''; return; }
+  const items = [];
+  headings.forEach((h, idx) => {
+    if(!h.id) h.id = 'toc-heading-' + idx;
+    items.push(`<li class="${h.tagName === 'H3' ? 'toc-h3' : ''}"><a onclick="document.getElementById('${h.id}').scrollIntoView({behavior:'smooth'})">${esc(h.textContent)}</a></li>`);
+  });
+  box.innerHTML = `<div class="toc-box"><h4>📑 Table of Contents</h4><ul>${items.join('')}</ul></div>`;
+}
+
+function wireCopyCodeButtons(){
+  const content = document.getElementById('postContentBody');
+  if(!content) return;
+  content.querySelectorAll('pre').forEach(pre => {
+    if(pre.querySelector('.copy-code-btn')) return;
+    const btn = document.createElement('button');
+    btn.className = 'copy-code-btn';
+    btn.textContent = '📋 Copy';
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(pre.innerText).then(() => {
+        const old = btn.textContent;
+        btn.textContent = '✅ Copied';
+        setTimeout(() => btn.textContent = old, 1800);
+      });
+    });
+    pre.appendChild(btn);
+  });
+}
+
+function initReadingProgress(){
+  const bar = document.getElementById('readingProgress');
+  const content = document.getElementById('postContentBody');
+  if(!bar || !content) return;
+  function update(){
+    const rect = content.getBoundingClientRect();
+    const total = content.offsetHeight - window.innerHeight;
+    const scrolled = -rect.top;
+    const pct = total > 0 ? Math.min(100, Math.max(0, (scrolled / total) * 100)) : 0;
+    bar.style.width = pct + '%';
+  }
+  window.removeEventListener('scroll', window._readingProgressHandler || (()=>{}));
+  window._readingProgressHandler = update;
+  window.addEventListener('scroll', update);
+  update();
+}
+
+function toggleFocusMode(){
+  document.body.classList.toggle('focus-mode');
+  const btn = document.getElementById('focusModeBtn');
+  if(btn) btn.textContent = document.body.classList.contains('focus-mode') ? '🧘 Exit Focus' : '🧘 Focus Mode';
+}
+
+/* ================== TEXT-TO-SPEECH "LISTEN" ================== */
+let _listenState = 'stopped'; // stopped | playing | paused
+function toggleListen(postId){
+  const btn = document.getElementById('listenBtn');
+  if(!('speechSynthesis' in window)){ alert('Text-to-speech is not supported in this browser.'); return; }
+  if(_listenState === 'stopped'){
+    const content = document.getElementById('postContentBody');
+    const text = content ? content.innerText : '';
+    if(!text.trim()) return;
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 1;
+    utter.onend = () => { _listenState = 'stopped'; if(btn){ btn.textContent = '🔊 Listen'; btn.classList.remove('playing'); } };
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utter);
+    _listenState = 'playing';
+    if(btn){ btn.textContent = '⏸️ Pause'; btn.classList.add('playing'); }
+  } else if(_listenState === 'playing'){
+    window.speechSynthesis.pause();
+    _listenState = 'paused';
+    if(btn) btn.textContent = '▶️ Resume';
+  } else if(_listenState === 'paused'){
+    window.speechSynthesis.resume();
+    _listenState = 'playing';
+    if(btn) btn.textContent = '⏸️ Pause';
+  }
+}
+
+/* ================== "WAS THIS HELPFUL?" REACTIONS ================== */
+const HELPFUL_KEY = 'helpful_votes_v1';
+function getHelpfulVotes(){
+  try{ return JSON.parse(localStorage.getItem(HELPFUL_KEY) || '{}'); }catch(e){ return {}; }
+}
+function restoreHelpfulVoteState(postId){
+  const votes = getHelpfulVotes();
+  const voted = votes[postId];
+  if(!voted) return;
+  const yesBtn = document.getElementById('helpfulYesBtn');
+  const noBtn = document.getElementById('helpfulNoBtn');
+  [yesBtn, noBtn].forEach(b => { if(b) b.disabled = true; });
+  if(voted === 'yes' && yesBtn) yesBtn.classList.add('voted');
+  if(voted === 'no' && noBtn) noBtn.classList.add('voted');
+}
+async function voteHelpful(postId, type){
+  const votes = getHelpfulVotes();
+  if(votes[postId]) return;
+  const col = type === 'yes' ? 'helpful_yes' : 'helpful_no';
+  const countEl = document.getElementById(type === 'yes' ? 'helpfulYes' : 'helpfulNo');
+  const current = parseInt((countEl && countEl.textContent) || '0', 10) || 0;
+  try{
+    const {data: p} = await supa.from('posts').select(col).eq('id', postId).single();
+    const newVal = ((p && p[col]) || 0) + 1;
+    await supa.from('posts').update({[col]: newVal}).eq('id', postId);
+    if(countEl) countEl.textContent = newVal;
+  }catch(err){
+    if(countEl) countEl.textContent = current + 1; // optimistic fallback if columns are missing
+  }
+  votes[postId] = type;
+  localStorage.setItem(HELPFUL_KEY, JSON.stringify(votes));
+  restoreHelpfulVoteState(postId);
+}
 
 /* ================== SYSTEM SEGMENTS PAGE ================== */
 const SECTION_ICONS = ['💡','⚙️','🚀','📡','🧠','🔧','⚡','📦'];
@@ -2306,6 +2686,7 @@ async function editPost(id){
   document.getElementById('postSection').value = p.section_id || '';
   document.getElementById('postCover').value = p.cover_url || '';
   document.getElementById('postExcerpt').value = p.excerpt || '';
+  document.getElementById('postTags').value = Array.isArray(p.tags) ? p.tags.join(', ') : '';
   document.getElementById('postPublished').checked = p.published !== false;
   document.getElementById('postContent').innerHTML = p.content || '';
   window.scrollTo(0,0);
@@ -2347,6 +2728,7 @@ function resetPostForm(){
   document.getElementById('postSection').value = '';
   document.getElementById('postCover').value = '';
   document.getElementById('postExcerpt').value = '';
+  document.getElementById('postTags').value = '';
   document.getElementById('postPublished').checked = true;
   document.getElementById('postContent').innerHTML = '';
 }
@@ -2357,6 +2739,8 @@ async function savePost(){
   const section_id = document.getElementById('postSection').value || null;
   const cover_url = document.getElementById('postCover').value.trim();
   const excerpt = document.getElementById('postExcerpt').value.trim();
+  const tagsRaw = document.getElementById('postTags').value.trim();
+  const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : [];
   const published = document.getElementById('postPublished').checked;
   const content = document.getElementById('postContent').innerHTML.trim();
 
@@ -2365,9 +2749,11 @@ async function savePost(){
   const payload = {title, section_id, cover_url, excerpt, content, published};
   let error;
   if(id){
-    ({error} = await supa.from('posts').update(payload).eq('id', id));
+    ({error} = await supa.from('posts').update({...payload, tags}).eq('id', id));
+    if(error) ({error} = await supa.from('posts').update(payload).eq('id', id));
   } else {
-    ({error} = await supa.from('posts').insert(payload));
+    ({error} = await supa.from('posts').insert({...payload, tags}));
+    if(error) ({error} = await supa.from('posts').insert(payload));
   }
   if(error){ alert('Fault event failure logic: ' + error.message); return; }
   resetPostForm();
@@ -3235,6 +3621,7 @@ function markReveal(container){
   markReveal(document);
   typeHero();
   gmUpdateNavPoints();
+  updateSavedCountDot();
 })();
 </script>
 </body>
